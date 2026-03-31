@@ -128,7 +128,8 @@
       display:flex; align-items:center; gap:12px; padding:10px 12px;
       border-radius: 16px; background: var(--card); border: 1px solid var(--line);
       box-shadow: var(--shadow); width:100%; cursor: pointer;
-      transition: background .25s ease, border-color .25s ease, transform .06s ease;
+      color: var(--ink);
+      transition: background .25s ease, border-color .25s ease, transform .06s ease, color .25s ease;
     }
     .brand:active{ transform: translateY(1px); }
     .brand .logo{
@@ -136,8 +137,10 @@
       background: linear-gradient(135deg,#6EA8FF 0%,#7E85FF 50%,#B06BFF 100%);
       color:#fff; font-weight:800; font-size:18px;
     }
-    .brand strong{ letter-spacing:.2px; }
+    .brand strong{ letter-spacing:.2px; color: var(--ink); }
     .brand small{ display:block;color:var(--muted);font-weight:700 }
+    body.dark .brand strong{ color:#E7EEFF; }
+    body.dark .brand small{ color:#9FB3D6; }
 
     .nav{ margin-top: 6px; }
     .nav h5{ font-size:12px; color:#7D8AA3; letter-spacing:.4px; margin: 6px 10px; text-transform: uppercase; font-weight:800; }
@@ -163,7 +166,24 @@
 
     .sb-user{ margin-top: auto; padding: 12px; border:1px solid var(--line); border-radius: 16px; background: var(--card); transition: background .25s ease, border-color .25s ease; }
     .sb-user .row{ display:flex; align-items:center; gap:10px; }
-    .avatar{ width:40px; height:40px; border-radius:12px; background:#EEF2FF; display:grid; place-items:center; font-weight:800; }
+    .avatar{
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      background:#EEF2FF;
+      display:grid;
+      place-items:center;
+      font-weight:800;
+      background-size:cover;
+      background-position:center;
+      background-repeat:no-repeat;
+      overflow:hidden;
+    }
+    .avatar.has-photo{
+      color:transparent;
+      font-size:0;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
+    }
     body.dark .avatar{ background:#19274B; color:#C7D7FF; }
     .sb-user small{ display:block; color:var(--muted); margin-top:2px; }
     .logout{ margin-top: 10px; width:100%; padding: 10px 12px; border:none; border-radius: 12px; cursor:pointer; background:#F1F5FF; color:#243B77; font-weight:800; }
@@ -184,6 +204,35 @@
     /* Card */
     .card{ background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow); overflow: hidden; transition: background .25s ease, border-color .25s ease, box-shadow .25s ease; }
     .card-body{ padding: calc(var(--pad) + 6px); }
+    #page-scholarships.scholarships-flat{
+      margin: 0;
+      padding: 0;
+    }
+    #page-scholarships.scholarships-flat #scholarshipFrame{
+      margin-top: 0 !important;
+      border-radius: 0 !important;
+      display: block;
+      background: transparent;
+    }
+    #scholarshipBackBtn{
+      padding: 14px 20px !important;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 14px;
+      margin-bottom: 14px !important;
+      border: 0;
+      color: #0b1220;
+      background: linear-gradient(180deg, #f0c419, #eab308);
+      box-shadow: 0 12px 32px rgba(234,179,8,.28);
+      cursor: pointer;
+      transition: background .2s ease, transform .06s ease;
+    }
+    #scholarshipBackBtn:hover{
+      background: linear-gradient(180deg, #ffd765, #f0c419);
+    }
+    #scholarshipBackBtn:active{
+      transform: translateY(1px);
+    }
 
     /* ===== Dashboard styling ===== */
     .hero-banner{
@@ -195,7 +244,56 @@
     .hero-hello h1{ font-size: clamp(24px,2.6vw,32px); letter-spacing:.2px; }
     .hero-hello p{ color: var(--muted); margin-top:6px; }
     .hero-hello{ padding: var(--pad); }
-    .hero-art{ display:grid; place-items:center; padding-right: 20px; }
+    .hero-art{
+      display:grid;
+      place-items:center;
+      padding-right: 20px;
+      width: 240px;
+      min-height: 220px;
+      overflow: visible;
+    }
+    .hero-art > *{
+      grid-area: 1 / 1;
+    }
+    .hero-art.hero-no-photo #heroStudentPhoto{
+      display: none;
+    }
+    .hero-art.hero-has-photo #heroStudentPhoto{
+      display: block;
+    }
+    .hero-art.hero-has-photo #heroMascotFallback{
+      display: none;
+    }
+    .hero-art.hero-no-photo #heroMascotFallback{
+      display: grid;
+    }
+    .hero-student-photo{
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid rgba(255, 255, 255, 0.35);
+      background: #E7EDF7;
+      box-shadow: 0 10px 24px rgba(15, 39, 75, 0.12);
+      transform: translateX(-36px);
+    }
+    body.dark .hero-student-photo{
+      border-color: rgba(157, 183, 255, 0.35);
+      background: #0F1C3C;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    }
+    .hero-mascot-fallback{
+      width: 220px;
+      height: 220px;
+      display: grid;
+      place-items: center;
+      transform: translateX(-36px);
+    }
+    .hero-mascot-fallback svg{
+      width: 220px;
+      height: 220px;
+      display: block;
+    }
 
     .section-title{ font-size:16px; font-weight:800; color:#6B7080; letter-spacing:.3px; margin: 16px 4px 12px; }
 
@@ -237,6 +335,7 @@
     .pending{ background:#FFF6E6; color:#92400E; }
     .approved{ background:#E8F9EF; color:#166534; }
     .denied{ background:#FFE9EA; color:#991B1B; }
+    .rejected{ background:#FFE9EA; color:#991B1B; }
 
     .bar{ height:8px; border-radius: 999px; background:#EEF2FF; overflow:hidden; margin-top:8px; }
     .bar > i{ display:block; height:100%; width:0; background: linear-gradient(90deg,#5C7DF5,#8B5CF6); }
@@ -313,96 +412,74 @@
   display: block;
 }
 
-/* ============================= */
-/* 📱 Global Mobile Responsiveness */
-/* ============================= */
-
-/* Prevent horizontal scroll on mobile */
-html, body {
-  width: 100%;
-  overflow-x: hidden;
+.profile-photo-wrapper {
+  position: absolute;
+  top: 24px;
+  right: 24px;
 }
 
-/* Better mobile tap targets */
-button, a, input, .deck {
-  touch-action: manipulation;
+#profilePhoto {
+  width: 160px;     /* ⬅️ bigger */
+  height: 160px;    /* ⬅️ bigger */
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  border: 4px solid rgba(255, 255, 255, 0.35);
+  background-color: #0b132b;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Sidebar responsive collapse */
-@media (max-width: 740px) {
-  .shell {
-    grid-template-columns: 70px 1fr;
-  }
-  .brand strong,
-  .brand small,
-  .nav a span {
-    display: none;
-  }
-  .brand {
-    justify-content: center;
-  }
-  .sb-user {
-    display: none;
-  }
+#profilePhoto:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
 }
 
-/* Super small phones */
-@media (max-width: 450px) {
-  .metrics {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .deck {
-    grid-template-columns: 48px 1fr;
-    padding: 16px;
-  }
-
-  .deck .side {
-    display: none; /* Hide actions on tiny screens for simplicity */
-  }
-
-  .hero-banner {
-    padding: 12px;
-  }
-
-  .hero-hello h1 {
-    font-size: 20px;
-  }
-
-  .hero-hello p {
-    font-size: 13px;
-  }
-
-  .section-title {
-    font-size: 14px;
-  }
+/* In-app notification prompts */
+.notify-host{
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 9999;
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
+.notify-item{
+  min-width: 280px;
+  max-width: min(420px, calc(100vw - 36px));
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 10px;
+  align-items: start;
+  pointer-events: auto;
+  animation: notifyIn .2s ease;
+}
+.notify-item.success{ border-color: #86efac; }
+.notify-item.error{ border-color: #fca5a5; }
+.notify-item.info{ border-color: #93c5fd; }
+.notify-item i{
+  margin-top: 2px;
+  font-size: 14px;
+}
+.notify-item.success i{ color: #166534; }
+.notify-item.error i{ color: #b91c1c; }
+.notify-item.info i{ color: #1d4ed8; }
+.notify-item .msg{
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+@keyframes notifyIn{
+  from{ opacity: 0; transform: translateY(-6px); }
+  to{ opacity: 1; transform: translateY(0); }
 }
 
-/* Profile form single column */
-@media (max-width: 620px) {
-  .split {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Improve padding on tight screens */
-@media (max-width: 520px) {
-  .content {
-    padding: 14px;
-  }
-  .card-body {
-    padding: 18px;
-  }
-}
-
-/* Today pill full-width on mobile */
-@media (max-width: 520px) {
-  .today {
-    width: 100%;
-    text-align: center;
-  }
-}
 
 
 
@@ -462,23 +539,26 @@ button, a, input, .deck {
                   <h1>Hi, <span id="hiName">there</span></h1>
                   <p>Ready to start your day with some scholarship applications?</p>
                 </div>
-                <div class="hero-art" aria-hidden="true">
-                  <svg viewBox="0 0 140 140" width="160" height="160" role="img" aria-label="Mascot">
-                    <defs>
-                      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-                        <stop stop-color="#6EA8FF" offset="0"/>
-                        <stop stop-color="#8B5CF6" offset="1"/>
-                      </linearGradient>
-                    </defs>
-                    <circle cx="70" cy="70" r="60" fill="#FFFFFF" stroke="#E7EDF7"/>
-                    <circle cx="50" cy="58" r="10" fill="#FFE7E7"/>
-                    <circle cx="90" cy="58" r="10" fill="#E7F1FF"/>
-                    <circle cx="70" cy="80" r="28" fill="#F6F9FF" stroke="#E7EDF7"/>
-                    <circle cx="60" cy="76" r="4" fill="#1F2A37"/>
-                    <circle cx="80" cy="76" r="4" fill="#1F2A37"/>
-                    <path d="M55 88c9 9 21 9 30 0" stroke="#1F2A37" stroke-width="3" stroke-linecap="round"/>
-                    <rect x="38" y="100" width="64" height="12" rx="6" fill="url(#g)"/>
-                  </svg>
+                <div id="heroArtContainer" class="hero-art hero-no-photo" aria-hidden="true">
+                  <img id="heroStudentPhoto" class="hero-student-photo" alt="Student profile photo" />
+                  <div id="heroMascotFallback" class="hero-mascot-fallback">
+                    <svg viewBox="0 0 140 140" role="img" aria-label="Mascot">
+                      <defs>
+                        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                          <stop stop-color="#6EA8FF" offset="0"/>
+                          <stop stop-color="#8B5CF6" offset="1"/>
+                        </linearGradient>
+                      </defs>
+                      <circle cx="70" cy="70" r="60" fill="#FFFFFF" stroke="#E7EDF7"/>
+                      <circle cx="50" cy="58" r="10" fill="#FFE7E7"/>
+                      <circle cx="90" cy="58" r="10" fill="#E7F1FF"/>
+                      <circle cx="70" cy="80" r="28" fill="#F6F9FF" stroke="#E7EDF7"/>
+                      <circle cx="60" cy="76" r="4" fill="#1F2A37"/>
+                      <circle cx="80" cy="76" r="4" fill="#1F2A37"/>
+                      <path d="M55 88c9 9 21 9 30 0" stroke="#1F2A37" stroke-width="3" stroke-linecap="round"/>
+                      <rect x="38" y="100" width="64" height="12" rx="6" fill="url(#g)"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>
@@ -553,28 +633,32 @@ button, a, input, .deck {
             </div>
 
             <!-- Snapshot of Applications -->
-         <div class="card">
-  <div class="card-body">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
-      <h3 style="font-size:18px">Your Applications</h3>
-      <a href="tracking.html" class="chip" style="padding:8px 10px">See all</a>
-    </div>
-    <div class="list" id="appsSnapshot"></div>
-  </div>
-</div>
+            <div class="card">
+              <div class="card-body">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
+                  <h3 style="font-size:18px">Your Applications</h3>
+                  <a href="#" data-goto="apps" class="chip" style="padding:8px 10px">See all</a>
+                </div>
+                <div class="list" id="appsSnapshot"></div>
+              </div>
+            </div>
+          </section>
 
-
-      <!-- APPLICATIONS -->
-<section id="page-apps" class="page" onclick="window.location='tracking.html'" style="cursor:pointer">
-  <div class="card">
-    <div class="card-body">
-      <h1 style="font-size:22px">Track Your Applications</h1>
-      <p style="color:var(--muted);margin-top:4px">
-        Real-time updates of scholarships and grants you’ve submitted.
-      </p>
-    </div>
-  </div>
-</section>
+          <!-- APPLICATIONS -->
+          <section id="page-apps" class="page">
+            <iframe
+              id="trackingFrame"
+              src=""
+              scrolling="no"
+              style="
+                width: 100%;
+                border: none;
+                background: transparent;
+                display: block;
+                min-height: 70vh;
+              "
+            ></iframe>
+          </section>
 
 
           <!-- PROFILE -->
@@ -625,6 +709,16 @@ button, a, input, .deck {
               </div>
             </div>
 
+<div class="profile-photo-wrapper">
+  <img
+    id="profilePhoto"
+    alt="Profile Photo"
+  />
+  <input type="file" id="profilePhotoInput" hidden />
+</div>
+
+
+
             <div class="card" style="margin-top: var(--gap);">
               <div class="card-body">
                 <h2 style="font-size:18px">Requirements Status</h2>
@@ -638,13 +732,8 @@ button, a, input, .deck {
           <!-- SCHOLARSHIPS -->
           <!-- SCHOLARSHIPS -->
            
-<section id="page-scholarships" class="page">
-  <div class="card">
-    <div class="card-body">
-      <h1 style="font-size:22px;">Scholarships</h1>
-      <p style="color:var(--muted);margin-top:4px">
-        View available scholarship programs below.
-      </p>
+<section id="page-scholarships" class="page scholarships-flat">
+      <button id="scholarshipBackBtn" class="btn" style="display:none; margin-bottom:10px;">← Back to Available Scholarships</button>
 
       <!-- Scholarship content sandboxed in an iframe -->
       <iframe
@@ -654,13 +743,11 @@ button, a, input, .deck {
           width: 100%;
           height: 80vh;
           border: none;
-          margin-top: 16px;
-          border-radius: 12px;
+          margin-top: 0;
+          border-radius: 0;
           background: transparent;
         "
       ></iframe>
-    </div>
-  </div>
 </section>
 
 
@@ -673,13 +760,199 @@ button, a, input, .deck {
     </main>
   </div>
 
+  <div id="notifyHost" class="notify-host" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Supabase + logic -->
+<!-- Supabase + logic -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = "https://qdrnqkoozsloeqzxpgha.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkcm5xa29venNsb2VxenhwZ2hhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODQ5MjgsImV4cCI6MjA3NTE2MDkyOH0.E4Lp4LtyvRfFoImUkZMFyVBM7sro4aoNlQEa7sUIsIs";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const DEFAULT_PROFILE_ICON = 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png';
+    let seenNotificationKeys = new Set();
+    let isFirstNotificationsLoad = true;
+    let notificationPollHandle = null;
+    let notificationChannel = null;
+    let notificationRefreshTimer = null;
+    let audioCtx = null;
+    function getOrCreateAudioContext() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        audioCtx = new Ctx();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+    function playNotificationSound() {
+      try {
+        const ctx = getOrCreateAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(660, now + 0.22);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      } catch (_) {
+        // ignore audio failures
+      }
+    }
+    function scheduleNotificationsRefresh(studentEmail, options = {}) {
+      if (!studentEmail) return;
+      if (notificationRefreshTimer) window.clearTimeout(notificationRefreshTimer);
+      notificationRefreshTimer = window.setTimeout(() => {
+        fetchNotifications(studentEmail, options);
+      }, 140);
+    }
+    function subscribeToNotificationsRealtime(studentEmail) {
+      if (!studentEmail) return;
+      if (notificationChannel) {
+        try { supabaseClient.removeChannel(notificationChannel); } catch (_) {}
+        notificationChannel = null;
+      }
+
+      const filter = `email=eq.${studentEmail}`;
+      notificationChannel = supabaseClient
+        .channel(`student-notifications:${studentEmail}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'applicants_iskolar', filter },
+          (payload) => {
+            if (payload?.new?.message) {
+              scheduleNotificationsRefresh(studentEmail, { fromRealtime: true });
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'applicants_iskolar', filter },
+          (payload) => {
+            const oldMsg = String(payload?.old?.message || '').trim();
+            const newMsg = String(payload?.new?.message || '').trim();
+            if (newMsg && newMsg !== oldMsg) {
+              scheduleNotificationsRefresh(studentEmail, { fromRealtime: true });
+            }
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.warn('Notification realtime channel error.');
+          }
+        });
+    }
+    function showPrompt(message, type = 'info', timeout = 3200) {
+      const host = document.getElementById('notifyHost');
+      if (!host) return;
+      const item = document.createElement('div');
+      item.className = `notify-item ${type}`;
+      const icon = type === 'success'
+        ? 'fa-solid fa-circle-check'
+        : type === 'error'
+          ? 'fa-solid fa-circle-exclamation'
+          : 'fa-solid fa-circle-info';
+      item.innerHTML = `<i class="${icon}" aria-hidden="true"></i><div class="msg">${String(message || '').trim()}</div>`;
+      host.appendChild(item);
+      window.setTimeout(() => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(-4px)';
+        item.style.transition = 'opacity .18s ease, transform .18s ease';
+        window.setTimeout(() => item.remove(), 180);
+      }, Math.max(1200, timeout));
+    }
+
+    function showHeroMascotFallback() {
+      const heroArt = document.getElementById('heroArtContainer');
+      const heroPhoto = document.getElementById('heroStudentPhoto');
+      const heroMascot = document.getElementById('heroMascotFallback');
+      if (!heroArt || !heroPhoto || !heroMascot) return;
+      heroPhoto.removeAttribute('src');
+      heroArt.classList.add('hero-no-photo');
+      heroArt.classList.remove('hero-has-photo');
+    }
+
+    function showSidebarAvatarFallback() {
+      const sidebarAvatar = document.getElementById('sbAvatar');
+      if (!sidebarAvatar) return;
+      sidebarAvatar.classList.remove('has-photo');
+      sidebarAvatar.style.removeProperty('background-image');
+      sidebarAvatar.textContent = '👤';
+    }
+
+    function showSidebarAvatarPhoto(photoUrl) {
+      const sidebarAvatar = document.getElementById('sbAvatar');
+      if (!sidebarAvatar || !photoUrl) {
+        showSidebarAvatarFallback();
+        return;
+      }
+      sidebarAvatar.classList.add('has-photo');
+      sidebarAvatar.style.backgroundImage = `url("${photoUrl}")`;
+      sidebarAvatar.textContent = '';
+    }
+
+    function showHeroStudentPhoto(photoUrl) {
+      const heroArt = document.getElementById('heroArtContainer');
+      const heroPhoto = document.getElementById('heroStudentPhoto');
+      const heroMascot = document.getElementById('heroMascotFallback');
+      if (!heroArt || !heroPhoto || !heroMascot || !photoUrl) {
+        showHeroMascotFallback();
+        return;
+      }
+
+      heroPhoto.onerror = () => {
+        showHeroMascotFallback();
+      };
+      heroPhoto.src = photoUrl;
+      heroArt.classList.add('hero-has-photo');
+      heroArt.classList.remove('hero-no-photo');
+    }
+
+    async function getStudentPhotoUrlByEmail(email) {
+      if (!email) return null;
+
+      const { data, error } = await supabaseClient
+        .from('applicants_main')
+        .select('photo_path')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (error || !data || !data.photo_path) {
+        return null;
+      }
+
+      const { data: urlData } = supabaseClient.storage
+        .from('student_profile')
+        .getPublicUrl(data.photo_path);
+
+      return urlData?.publicUrl || null;
+    }
+
+    async function refreshDashboardHeroPhoto(email) {
+      try {
+        const photoUrl = await getStudentPhotoUrlByEmail(email);
+        if (!photoUrl) {
+          showHeroMascotFallback();
+          showSidebarAvatarFallback();
+          return;
+        }
+        showHeroStudentPhoto(photoUrl);
+        showSidebarAvatarPhoto(photoUrl);
+      } catch (err) {
+        console.error('Failed to load hero photo:', err);
+        showHeroMascotFallback();
+        showSidebarAvatarFallback();
+      }
+    }
+
 document.addEventListener("DOMContentLoaded", async () => {
   const { data: sessionData, error } = await supabaseClient.auth.getSession();
   const user = sessionData?.session?.user;
@@ -695,18 +968,44 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const studentEmail = user.email;
+  refreshDashboardHeroPhoto(studentEmail);
   fetchNotifications(studentEmail);
+  subscribeToNotificationsRealtime(studentEmail);
+  const unlockAudio = () => {
+    getOrCreateAudioContext();
+  };
+  document.addEventListener('pointerdown', unlockAudio, { once: true });
+  document.addEventListener('keydown', unlockAudio, { once: true });
+  fetchApplicationsSnapshot(studentEmail);
 });
 
-async function fetchNotifications(studentEmail) {
+window.addEventListener('beforeunload', () => {
+  if (notificationRefreshTimer) {
+    window.clearTimeout(notificationRefreshTimer);
+    notificationRefreshTimer = null;
+  }
+  if (notificationPollHandle) {
+    window.clearInterval(notificationPollHandle);
+    notificationPollHandle = null;
+  }
+  if (notificationChannel) {
+    try { supabaseClient.removeChannel(notificationChannel); } catch (_) {}
+    notificationChannel = null;
+  }
+});
+
+async function fetchNotifications(studentEmail, options = {}) {
+  const { fromPolling = false, fromRealtime = false } = options;
   const notiList = document.getElementById("notiList");
   if (!notiList) return;
 
-  notiList.innerHTML = "<p>Loading notifications...</p>";
+  if (!fromPolling && !fromRealtime) {
+    notiList.innerHTML = "<p>Loading notifications...</p>";
+  }
 
   const { data, error } = await supabaseClient
     .from("applicants_iskolar")
-    .select("message, scholarship_program, created_at")
+    .select("id, message, scholarship_program, created_at")
     .eq("email", studentEmail)
     .not("message", "is", null)
     .order("created_at", { ascending: false });
@@ -719,8 +1018,26 @@ async function fetchNotifications(studentEmail) {
 
   if (!data || data.length === 0) {
     notiList.innerHTML = "<p>No notifications yet.</p>";
+    seenNotificationKeys = new Set();
+    isFirstNotificationsLoad = false;
     return;
   }
+
+  const latestKeys = new Set(
+    data.map((item) => `${item.id || ''}|${item.created_at || ''}|${item.message || ''}`)
+  );
+  if (!isFirstNotificationsLoad) {
+    let hasNew = false;
+    latestKeys.forEach((key) => {
+      if (!seenNotificationKeys.has(key)) hasNew = true;
+    });
+    if (hasNew) {
+      playNotificationSound();
+      showPrompt('You have a new notification.', 'info', 2600);
+    }
+  }
+  seenNotificationKeys = latestKeys;
+  isFirstNotificationsLoad = false;
 
   notiList.innerHTML = "";
   data.forEach((item) => {
@@ -743,6 +1060,66 @@ async function fetchNotifications(studentEmail) {
     `;
     notiList.appendChild(div);
   });
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getStatusClass(status) {
+  const normalized = (status || '').toLowerCase();
+  if (normalized === 'approved') return 'approved';
+  if (normalized === 'rejected' || normalized === 'denied') return 'rejected';
+  return 'pending';
+}
+
+async function fetchApplicationsSnapshot(studentEmail) {
+  const appsSnapshot = document.getElementById('appsSnapshot');
+  if (!appsSnapshot) return;
+
+  appsSnapshot.innerHTML = '<p style="color:var(--muted)">Loading applications...</p>';
+
+  const { data, error } = await supabaseClient
+    .from('applicants_iskolar')
+    .select('Name, scholarship_program, campus, status')
+    .eq('email', studentEmail)
+    .order('id', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching applications snapshot:', error);
+    appsSnapshot.innerHTML = '<p style="color:var(--muted)">Failed to load applications.</p>';
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    appsSnapshot.innerHTML = '<p style="color:var(--muted)">No applications submitted yet.</p>';
+    return;
+  }
+
+  const snapshotItems = data.slice(0, 3);
+
+  appsSnapshot.innerHTML = snapshotItems.map((row) => {
+    const statusLabel = row.status || 'Pending';
+    const statusClass = getStatusClass(statusLabel);
+
+    return `
+      <article class="deck">
+        <div class="thumb"><i class="fa-solid fa-file-lines"></i></div>
+        <div>
+          <h4>${escapeHtml(row.scholarship_program || 'Scholarship Application')}</h4>
+          <div class="meta">${escapeHtml(row.Name || 'Applicant')} • ${escapeHtml(row.campus || 'N/A')}</div>
+        </div>
+        <div class="side">
+          <span class="status ${statusClass}">${escapeHtml(statusLabel)}</span>
+        </div>
+      </article>
+    `;
+  }).join('');
 }
 
 
@@ -772,12 +1149,46 @@ async function fetchNotifications(studentEmail) {
       updateModeUI();
     }
 
+    function broadcastThemeToEmbeddedApp() {
+      const theme = document.body.classList.contains('dark') ? 'dark' : 'light';
+      const scholarshipFrame = document.getElementById('scholarshipFrame');
+      if (!scholarshipFrame) return;
+
+      try {
+        scholarshipFrame.contentWindow?.postMessage({ type: 'easekolar-theme', theme }, window.location.origin);
+      } catch (_) {}
+
+      try {
+        const doc = scholarshipFrame.contentDocument || scholarshipFrame.contentWindow?.document;
+        if (doc?.documentElement) {
+          doc.documentElement.setAttribute('data-theme', theme);
+        }
+        if (doc?.body) {
+          doc.body.classList.toggle('theme-light', theme === 'light');
+        }
+        const appFrame = doc?.getElementById('appFrame');
+        appFrame?.contentWindow?.postMessage({ type: 'easekolar-theme', theme }, window.location.origin);
+
+        // Hard fallback: directly mirror theme in nested application document.
+        const appDoc = appFrame?.contentDocument || appFrame?.contentWindow?.document;
+        if (appDoc?.documentElement) {
+          appDoc.documentElement.setAttribute('data-theme', theme);
+        }
+        if (appDoc?.body) {
+          appDoc.body.classList.toggle('theme-light', theme === 'light');
+        }
+      } catch (_) {}
+    }
+
     applySavedTheme();
+    setTimeout(broadcastThemeToEmbeddedApp, 0);
+    setInterval(broadcastThemeToEmbeddedApp, 400);
 
     modeToggle?.addEventListener('click', ()=>{
       const isDark = document.body.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
       updateModeUI();
+      broadcastThemeToEmbeddedApp();
     });
 
     // === NAVIGATION ===
@@ -788,6 +1199,9 @@ async function fetchNotifications(studentEmail) {
       $$('.page').forEach(p => p.classList.remove('active'));
       const pageEl = document.getElementById(`page-${page}`);
       if (pageEl) pageEl.classList.add('active');
+      if (page === 'apps' && typeof window.ensureApplicationsPageLoaded === 'function') {
+        window.ensureApplicationsPageLoaded();
+      }
       window.scrollTo({top:0, behavior:'smooth'});
     }
 
@@ -864,7 +1278,7 @@ async function fetchNotifications(studentEmail) {
     saveBtn?.addEventListener('click', async () => {
       const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) {
-        alert('Not logged in.');
+        showPrompt('Not logged in.', 'error');
         return;
       }
 
@@ -883,7 +1297,7 @@ async function fetchNotifications(studentEmail) {
 
       if (mainError) {
         console.error(mainError);
-        alert('Failed to update main applicant table.');
+        showPrompt('Failed to update main applicant table.', 'error');
         return;
       }
 
@@ -900,10 +1314,105 @@ async function fetchNotifications(studentEmail) {
         }
       }
 
-      alert('Profile updated successfully!');
+      showPrompt('Profile updated successfully!', 'success');
       disableEdit();
       loadProfile(); // refresh data
     });
+document.addEventListener('DOMContentLoaded', async () => {
+  const profilePhoto = document.getElementById('profilePhoto');
+  const profilePhotoInput = document.getElementById('profilePhotoInput');
+
+  if (!profilePhoto || !profilePhotoInput) {
+    console.error('Profile photo elements not found');
+    return;
+  }
+
+  // 🔐 Get logged-in user FIRST
+  const {
+    data: { user },
+    error: authError
+  } = await supabaseClient.auth.getUser();
+
+  if (authError || !user) {
+    console.warn('User not logged in');
+    return;
+  }
+
+  const currentUserEmail = user.email;
+
+  // 📷 Load profile photo
+  async function loadProfile() {
+    const { data, error } = await supabaseClient
+      .from('applicants_main')
+      .select('photo_path')
+      .eq('email', currentUserEmail)
+      .maybeSingle();
+
+    if (error || !data || !data.photo_path) {
+      profilePhoto.src = DEFAULT_PROFILE_ICON;
+      showHeroMascotFallback();
+      showSidebarAvatarFallback();
+      return;
+    }
+
+    const { data: urlData } = supabaseClient.storage
+      .from('student_profile')
+      .getPublicUrl(data.photo_path);
+
+    if (!urlData?.publicUrl) {
+      profilePhoto.src = DEFAULT_PROFILE_ICON;
+      showHeroMascotFallback();
+      showSidebarAvatarFallback();
+      return;
+    }
+
+    profilePhoto.src = urlData.publicUrl;
+    showHeroStudentPhoto(urlData.publicUrl);
+    showSidebarAvatarPhoto(urlData.publicUrl);
+  }
+
+  // 🖱 Click image → open file picker
+  profilePhoto.addEventListener('click', () => {
+    profilePhotoInput.click();
+  });
+
+  // ⬆ Upload new photo
+  profilePhotoInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const ext = file.name.split('.').pop();
+    const photoPath = `students/${currentUserEmail}_${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from('student_profile')
+      .upload(photoPath, file, { upsert: true });
+
+    if (uploadError) {
+      showPrompt('Photo upload failed: ' + uploadError.message, 'error');
+      return;
+    }
+
+    const { error: dbError } = await supabaseClient
+      .from('applicants_main')
+      .update({ photo_path: photoPath })
+      .eq('email', currentUserEmail);
+
+    if (dbError) {
+      showPrompt('Failed to save photo: ' + dbError.message, 'error');
+      return;
+    }
+
+    loadProfile(); // 🔄 refresh image
+  });
+
+  // 🚀 Initial load
+  loadProfile();
+});
+
+
+
+
 
  async function loadCounts() {
   const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -931,7 +1440,7 @@ async function fetchNotifications(studentEmail) {
   apps.forEach(row => {
     const status = row.status?.toLowerCase();
     if (status === "approved") approved++;
-    else if (status === "pending" || status === "processing") pending++;
+    else if (status === "pending") pending++;
     else if (status === "rejected") rejected++;
   });
 
@@ -951,8 +1460,10 @@ document.addEventListener("DOMContentLoaded", loadCounts);
     async function loadProfile() {
       const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) {
-        alert('Please log in first.');
-        window.location.href = 'login-signup.html';
+        showPrompt('Please log in first.', 'error');
+        setTimeout(() => {
+          window.location.href = 'login-signup.html';
+        }, 650);
         return;
       }
 
@@ -966,7 +1477,7 @@ document.addEventListener("DOMContentLoaded", loadCounts);
 
 if (mainError || !mainData) {
   console.error(mainError);
-  alert('Error loading profile data.');
+  showPrompt('Error loading profile data.', 'error');
   return;
 }
 
@@ -1005,6 +1516,21 @@ if (!currentCampus) {
 // ✅ Merge both data sources
 const data = { ...mainData, ...(campusData || {}) };
 originalData = { ...data };
+
+// Cache minimal profile for embedded application prefill fallback
+try {
+  localStorage.setItem('applicantProfileCache', JSON.stringify({
+    full_name: data.full_name || '',
+    email: data.email || '',
+    phone_number: data.phone_number || '',
+    birthdate: data.birthdate || '',
+    campus: data.campus || '',
+    college: data.college || '',
+    course: data.course || ''
+  }));
+} catch (_) {
+  // ignore cache write issues
+}
 
 // ✅ Update sidebar greeting here (inside the same async function)
 document.getElementById('sbName').textContent = data.full_name || 'Student';
@@ -1107,24 +1633,187 @@ navItems.forEach(item => {
 document.addEventListener("DOMContentLoaded", () => {
   const scholarshipTab = document.querySelector('[data-page="scholarships"]');
   const scholarshipFrame = document.getElementById("scholarshipFrame");
+  const scholarshipBackBtn = document.getElementById("scholarshipBackBtn");
   let loaded = false;
 
-  if (scholarshipTab) {
+  if (scholarshipTab && scholarshipFrame) {
     scholarshipTab.addEventListener("click", () => {
       if (!loaded) {
-        scholarshipFrame.src = "scholarship.html"; // ✅ your existing file with Supabase logic
+        scholarshipFrame.src = `scholarship.html?v=${Date.now()}`; // load latest scholarships page
+        scholarshipFrame.addEventListener('load', () => {
+          try {
+            const doc = scholarshipFrame.contentDocument || scholarshipFrame.contentWindow.document;
+            if (!doc) return;
+            broadcastThemeToEmbeddedApp();
+            // hide inner scrollbars and fit height to content
+            if (doc.documentElement) doc.documentElement.style.overflow = 'hidden';
+            if (doc.body) {
+              doc.body.style.margin = '0';
+              doc.body.style.padding = '0';
+              doc.body.style.background = 'transparent';
+              doc.body.style.overflow = 'hidden';
+            }
+            const updateBack = () => {
+              try {
+                const app = doc.getElementById('appEmbed');
+                const show = !!(
+                  app &&
+                  app.style.display !== 'none' &&
+                  getComputedStyle(app).display !== 'none'
+                );
+                if (scholarshipBackBtn) scholarshipBackBtn.style.display = show ? 'inline-block' : 'none';
+              } catch (_) {}
+            };
+            const resize = () => {
+              const h = Math.max(
+                doc.body?.scrollHeight || 0,
+                doc.documentElement?.scrollHeight || 0
+              );
+              if (h) scholarshipFrame.style.height = h + 'px';
+            };
+            resize();
+            updateBack();
+            let rafId = 0;
+            const mo = new MutationObserver(() => {
+              if (rafId) return;
+              rafId = requestAnimationFrame(() => {
+                rafId = 0;
+                resize();
+                updateBack();
+              });
+            });
+            mo.observe(doc.documentElement, {
+              childList: true,
+              subtree: true,
+              attributes: true,
+              attributeFilter: ['style', 'class']
+            });
+          } catch (_) { /* ignore cross-origin issues */ }
+        });
         loaded = true;
       }
     });
   }
+
+  // Back button -> switch embedded view back to list
+  scholarshipBackBtn?.addEventListener('click', () => {
+    try {
+      const doc = scholarshipFrame.contentDocument || scholarshipFrame.contentWindow.document;
+      const list = doc.getElementById('list');
+      const app = doc.getElementById('appEmbed');
+      if (list) list.style.display = 'block';
+      if (app) app.style.display = 'none';
+      scholarshipBackBtn.style.display = 'none';
+      scholarshipFrame.contentWindow?.scrollTo?.(0, 0);
+    } catch (_) {
+      // fallback: reload to scholarships list
+      scholarshipFrame.src = `scholarship.html?v=${Date.now()}`;
+    }
+  });
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const appsTab = document.querySelector('[data-page="apps"]');
+  const trackingFrame = document.getElementById("trackingFrame");
+  let loadedTracking = false;
+  let trackingMutationObserver = null;
+  let trackingResizeObserver = null;
+  let trackingIntervalId = null;
+  let trackingWindowResizeBound = false;
+  let trackingRaf = 0;
 
+  if (appsTab && trackingFrame) {
+    const measureTrackingFrame = () => {
+      try {
+        const doc = trackingFrame.contentDocument || trackingFrame.contentWindow.document;
+        if (!doc) return;
+        if (doc.documentElement) {
+          doc.documentElement.style.overflow = 'hidden';
+        }
+        if (doc.body) {
+          doc.body.style.margin = '0';
+          doc.body.style.padding = '0';
+          doc.body.style.background = 'transparent';
+          doc.body.style.overflow = 'hidden';
+        }
+        const h = Math.max(
+          doc.body?.scrollHeight || 0,
+          doc.documentElement?.scrollHeight || 0,
+          doc.body?.offsetHeight || 0,
+          doc.documentElement?.offsetHeight || 0
+        );
+        if (h > 0) trackingFrame.style.height = `${h}px`;
+      } catch (_) { /* cross-origin or other issue; ignore */ }
+    };
+
+    const scheduleTrackingMeasure = () => {
+      if (trackingRaf) return;
+      trackingRaf = requestAnimationFrame(() => {
+        trackingRaf = 0;
+        measureTrackingFrame();
+      });
+    };
+
+    const syncTrackingFrame = () => {
+      measureTrackingFrame();
+      // Multi-pass sizing catches async row/font/layout shifts.
+      [0, 80, 220, 500, 1000].forEach((ms) => {
+        setTimeout(measureTrackingFrame, ms);
+      });
+
+      try {
+        const doc = trackingFrame.contentDocument || trackingFrame.contentWindow.document;
+        if (!doc) return;
+
+        if (!trackingMutationObserver && doc.documentElement) {
+          trackingMutationObserver = new MutationObserver(() => scheduleTrackingMeasure());
+          trackingMutationObserver.observe(doc.documentElement, { childList: true, subtree: true, attributes: true });
+        }
+
+        if (!trackingResizeObserver && window.ResizeObserver) {
+          trackingResizeObserver = new ResizeObserver(() => scheduleTrackingMeasure());
+          if (doc.documentElement) trackingResizeObserver.observe(doc.documentElement);
+          if (doc.body) trackingResizeObserver.observe(doc.body);
+        }
+
+        if (!trackingWindowResizeBound && trackingFrame.contentWindow) {
+          trackingFrame.contentWindow.addEventListener('resize', scheduleTrackingMeasure);
+          trackingWindowResizeBound = true;
+        }
+
+        if (!trackingIntervalId) {
+          trackingIntervalId = window.setInterval(measureTrackingFrame, 1200);
+        }
+      } catch (_) { /* ignore */ }
+    };
+
+    if (!trackingFrame.dataset.loadBound) {
+      trackingFrame.addEventListener('load', syncTrackingFrame);
+      trackingFrame.dataset.loadBound = 'true';
+    }
+
+    const ensureApplicationsPageLoaded = () => {
+      if (!loadedTracking) {
+        trackingFrame.src = `tracking.html?v=${Date.now()}`;
+        loadedTracking = true;
+        return;
+      }
+
+      if (trackingFrame.contentDocument?.readyState === 'complete') {
+        syncTrackingFrame();
+      }
+    };
+
+    window.ensureApplicationsPageLoaded = ensureApplicationsPageLoaded;
+    appsTab.addEventListener("click", ensureApplicationsPageLoaded);
+  }
+});
 
 
 
   </script>
 
   
+  <script src="shared/autocomplete-off.js" defer></script>
 </body>
 </html>

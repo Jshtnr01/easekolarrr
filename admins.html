@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Management</title>
+  <script>
+    (function () {
+      const saved = localStorage.getItem('theme');
+      const isDark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    })();
+  </script>
+  <style>
+    :root{
+      --bg: #eef3fb; --panel: #ffffff; --muted: #eaf1ff; --border: #e6eaf2; --text: #0f172a;
+      --sidebar: #fbfdff; --sidebar-border: #e6eaf2; --sidebar-hover: #f0f4ff; --sidebar-active: #e7efff;
+      --content-grad1: #fbfdff; --content-grad2: #f1f5fe;
+      --card: #ffffff; --line: #dee6f3; --primary:#1c3d77; --primary-100:#eaf1ff;
+      --input-bg:#f8fafe; --input-text:#0f172a; --input-placeholder:#64748b;
+    }
+    [data-theme='dark']{
+      --bg:#0a142b; --panel:#0f1c3c; --muted:#14284d; --border:#1c2c56; --text:#e7eeff;
+      --sidebar:#0c1836; --sidebar-border:#1c2c56; --sidebar-hover:#172b59; --sidebar-active:#203055;
+      --content-grad1:#0b1836; --content-grad2:#0a1530;
+      --card:#0f1c3c; --line:#1c2c56; --primary:#9db7ff; --primary-100:#172b59;
+      --input-bg:#0d1731; --input-text:#e7eeff; --input-placeholder:#8da1c6;
+    }
+    *{ box-sizing:border-box; }
+    html, body { height: 100%; }
+    body{ background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; margin:0; padding:0; display:block; }
+    .admin-shell{ display:flex; width:100%; height:100svh; min-height:100vh; background:var(--panel); border:0; border-radius:0; box-shadow:none; overflow:hidden; }
+    .sidebar{ width:280px; background:var(--sidebar); border-right:1px solid var(--sidebar-border); padding:24px 20px; display:flex; flex-direction:column; gap:16px; }
+    .brand{ font-weight:800; font-size:1.1rem; margin-bottom:6px; color:var(--text); }
+    .menu{ display:flex; flex-direction:column; gap:6px; }
+    .menu a{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; color:var(--text); text-decoration:none; transition:.2s; }
+    .menu a:hover{ background:var(--sidebar-hover); }
+    .menu a.active{ background:var(--sidebar-active); border:1px solid var(--border); }
+    .sidebar-bottom{ margin-top:auto; }
+    #logout-btn{ background: var(--text); color: var(--panel); padding: 10px 12px; border-radius: 12px; font-weight: 700; border:none; cursor:pointer; width:100%; }
+    .profile-card{ background: var(--sidebar-active); border:1px solid var(--sidebar-border); border-radius:16px; padding:12px; }
+    .profile-row{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .avatar{ width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background: var(--sidebar-hover); }
+    .profile-name{ font-weight:800; }
+    .profile-role{ font-size:12px; color:#6b7280; }
+    .content{ flex:1; width:100%; background: linear-gradient(180deg,var(--content-grad1),var(--content-grad2)); padding:28px 24px 32px 32px; overflow:auto; }
+    .content > *{ width:100%; max-width:100%; margin-left:0; margin-right:0; }
+    .card{ background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:18px; box-shadow:0 6px 16px rgba(15,23,42,.04); width:100%; max-width:none; }
+    label{ font-size:13px; font-weight:600; display:block; margin:8px 0 6px; }
+    input, select{
+      width:100%;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      font-size:14px;
+      background:var(--input-bg);
+      color:var(--input-text);
+    }
+    input::placeholder{ color:var(--input-placeholder); }
+    input:focus, select:focus{
+      outline:none;
+      border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent);
+    }
+    [data-theme='dark'] select option{
+      background:#0f1c3c;
+      color:#e7eeff;
+    }
+    .btn{ border:none; cursor:pointer; border-radius:12px; padding:12px 14px; font-weight:800; }
+    .btn-primary{ background:#e0b01a; color:#0b1600; }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 18px; }
+    .span-2{ grid-column: span 2; }
+  </style>
+</head>
+<body>
+  <div class="admin-shell">
+    <div id="sidebar-root"></div>
+    <main class="content">
+      <h1 style="margin:0 0 12px; font-size:24px; font-weight:800;">Admin Management</h1>
+      <div class="card">
+        <form id="adminForm" autocomplete="off">
+          <div class="grid">
+            <div class="span-2">
+              <label for="adminName">Full Name</label>
+              <input type="text" id="adminName" required />
+            </div>
+            <div class="span-2">
+              <label for="adminEmail">Email</label>
+              <input type="email" id="adminEmail" required />
+            </div>
+            <div class="span-2">
+              <label for="adminPassword">Password</label>
+              <input type="password" id="adminPassword" autocomplete="new-password" required />
+            </div>
+            <div class="span-2">
+              <label for="adminPhone">Phone Number</label>
+              <input type="text" id="adminPhone" required />
+            </div>
+            <div class="span-2">
+              <label for="adminCampus">Campus</label>
+              <select id="adminCampus" required>
+                <option value="">Select Campus</option>
+                <option value="Sta Cruz">Sta Cruz</option>
+                <option value="Candelaria">Candelaria</option>
+                <option value="Masinloc">Masinloc</option>
+                <option value="Iba">Iba</option>
+                <option value="Iba">Botolan</option>
+                <option value="Caste">Castillejos</option>
+                <option value="San Marcelino">San Marcelino</option>
+              </select>
+            </div>
+            <div class="span-2" style="margin-top:6px;">
+              <button type="submit" class="btn btn-primary">Add Admin</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function installPromptAlerts() {
+      if (window.__easePromptInstalled) return;
+      window.__easePromptInstalled = true;
+      const style = document.createElement('style');
+      style.textContent = `
+        .ease-prompt-host{position:fixed;top:18px;right:18px;z-index:99999;display:grid;gap:10px;pointer-events:none}
+        .ease-prompt{min-width:280px;max-width:min(440px,calc(100vw - 36px));padding:12px 14px;border-radius:12px;border:1px solid #dbe7fb;background:#ffffff;color:#0f274b;box-shadow:0 12px 28px rgba(15,39,75,.14);display:grid;grid-template-columns:20px 1fr;gap:10px;align-items:start;animation:easePromptIn .2s ease}
+        .ease-prompt i{margin-top:2px;font-size:14px;color:#1d4ed8}
+        .ease-prompt .msg{font-size:13px;line-height:1.45;word-break:break-word}
+        @keyframes easePromptIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+      `;
+      document.head.appendChild(style);
+      const host = document.createElement('div');
+      host.className = 'ease-prompt-host';
+      host.setAttribute('aria-live', 'polite');
+      host.setAttribute('aria-atomic', 'true');
+      document.body.appendChild(host);
+      window.alert = function alertPrompt(message) {
+        const item = document.createElement('div');
+        item.className = 'ease-prompt';
+        item.innerHTML = '<i class="fa-solid fa-circle-info" aria-hidden="true"></i><div class="msg"></div>';
+        item.querySelector('.msg').textContent = String(message || '').trim();
+        host.appendChild(item);
+        setTimeout(() => {
+          item.style.opacity = '0';
+          item.style.transform = 'translateY(-4px)';
+          item.style.transition = 'opacity .18s ease, transform .18s ease';
+          setTimeout(() => item.remove(), 180);
+        }, 3200);
+      };
+    })();
+  </script>
+
+  <script src="shared/sidebar.js" defer></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const SUPABASE_URL = "https://qdrnqkoozsloeqzxpgha.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkcm5xa29venNsb2VxenhwZ2hhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODQ5MjgsImV4cCI6MjA3NTE2MDkyOH0.E4Lp4LtyvRfFoImUkZMFyVBM7sro4aoNlQEa7sUIsIs";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const ADMIN_CAMPUS = (localStorage.getItem('adminCampus')||'').trim();
+    if (!ADMIN_CAMPUS) window.location.href = 'login-signup.html';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.loadAdminSidebar) window.loadAdminSidebar('admin');
+    });
+
+    const adminForm = document.getElementById('adminForm');
+    adminForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const adminData = {
+        full_name: document.getElementById('adminName').value.trim(),
+        email: document.getElementById('adminEmail').value.trim(),
+        password: document.getElementById('adminPassword').value.trim(),
+        phone_number: document.getElementById('adminPhone').value.trim(),
+        campus: document.getElementById('adminCampus').value,
+      };
+      const { error } = await supabase.from('admins').insert([adminData]);
+      if (error) {
+        console.error('Error adding admin:', error);
+        alert('Failed to add admin.');
+      } else {
+        alert('Admin added successfully.');
+        adminForm.reset();
+      }
+    });
+  </script>
+  <script src="shared/autocomplete-off.js" defer></script>
+</body>
+</html>

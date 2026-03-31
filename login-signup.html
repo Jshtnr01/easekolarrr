@@ -26,12 +26,17 @@
     background:radial-gradient(1400px 700px at 50% -10%,#12224a 0%,var(--page-start) 45%,var(--page-end) 100%);
     color:var(--text);display:grid;place-items:center;padding:clamp(12px,2vw,18px);
   }
-  .stage{width:min(1200px,80vw);height:min(860px,80svh);
+  .stage{
+    width:min(1400px,96vw); /* Increased from 1200px to 1400px */
+    height:min(920px,96svh); /* Increased from 860px to 920px */
     background:var(--stage-bg);border-radius:calc(var(--radius-xl) + 10px);
-    padding:clamp(10px,1.8vw,16px);box-shadow:var(--shadow-1);}
-  .shell{height:100%;display:grid;grid-template-columns:1.15fr 1fr;
+    padding:clamp(10px,1.8vw,16px);box-shadow:var(--shadow-1);
+  }
+  .shell{
+    height:100%;display:grid;grid-template-columns:1.1fr 1fr; /* Adjusted ratio */
     background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));
-    border-radius:var(--radius-xl);overflow:hidden;}
+    border-radius:var(--radius-xl);overflow:hidden;
+  }
   .art{position:relative;background:url("images/logs.jpg") center/cover no-repeat;}
   .art::before{content:"";position:absolute;inset:0;background:
       radial-gradient(140px 90px at 18% 22%,rgba(255,255,255,.18) 0%,transparent 60%),
@@ -41,22 +46,32 @@
   .art-copy{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#f5f8ff;padding:clamp(16px,3vw,32px);} 
   .art h2{font-size:clamp(26px,3.2vw,40px);font-weight:800;letter-spacing:.2px;text-shadow:0 6px 22px rgba(0,0,0,.45);} 
   .art p{margin-top:8px;color:#cfe1ff;font-weight:500;}
-  .card{background:var(--panel);border-left:1px solid var(--border);
-    display:flex;align-items:center;justify-content:center;padding:clamp(22px,3.5vw,44px);}
-  .stack{width:min(520px,92%);} 
+  .card{
+    background:var(--panel);border-left:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    padding:clamp(16px,2.5vw,32px); /* Reduced padding */
+    overflow-y:auto; /* Allow scrolling if needed */
+  }
+  .stack{
+    width:min(480px,95%); /* Reduced from 520px to 480px */
+    max-height:100%;
+  } 
   .card h1{font-size:clamp(22px,2.4vw,30px);margin-bottom:6px;} 
   .card .sub{color:var(--muted);margin-bottom:18px;}
 
   /* ✅ SCOPE form controls so they don't affect Flatpickr internals */
-  .stack label{display:block;font-size:13px;font-weight:600;margin-top:10px;margin-bottom:6px;color:#d4dcf4;}
+  .stack label{
+    display:block;font-size:13px;font-weight:600;
+    margin-top:8px;margin-bottom:5px;color:#d4dcf4; /* Reduced margins */
+  }
   .stack input,
   .stack select{
     width:100%;
     background:var(--panel-2);
     border:1px solid var(--border);
     border-radius:12px;
-    padding:12px 14px;
-    font-size:15px;
+    padding:10px 12px; /* Reduced padding */
+    font-size:14px; /* Slightly smaller font */
     color:var(--text);
     outline:none;
     transition:border-color .2s,box-shadow .2s;
@@ -66,13 +81,66 @@
   .stack input:focus,
   .stack select:focus{border-color:#3b82f6;box-shadow:0 0 0 4px rgba(59,130,246,.18);} 
 
-  .btn{border:none;cursor:pointer;border-radius:14px;padding:12px 16px;font-weight:800;transition:filter .2s,transform .02s;} 
+  .btn{
+    border:none;cursor:pointer;border-radius:14px;
+    padding:10px 14px; /* Reduced padding */
+    font-weight:800;transition:filter .2s,transform .02s;
+    font-size:14px; /* Slightly smaller font */
+  } 
   .btn:active{transform:translateY(1px);} 
-  .btn-gold{width:100%;margin-top:14px;background:linear-gradient(180deg,var(--gold-1),var(--gold-2));color:#111827;} 
-  .row{display:flex;align-items:center;gap:10px;margin-top:12px;} 
-  .switch{margin-top:16px;font-size:14px;color:var(--muted);} 
-  .switch button{background:transparent;color:#ffe082;border:none;font-weight:800;cursor:pointer;}
+  .btn-gold{
+    width:100%;margin-top:12px; /* Reduced margin */
+    background:linear-gradient(180deg,var(--gold-1),var(--gold-2));color:#111827;
+  } 
+  .row{
+    display:flex;align-items:center;gap:8px; /* Reduced gap */
+    margin-top:10px; /* Reduced margin */
+  } 
+  .switch{
+    margin-top:14px; /* Reduced margin */
+    font-size:14px;color:var(--muted);
+  } 
+  .switch button{
+    background:transparent;color:#ffe082;border:none;font-weight:800;cursor:pointer;
+  }
   .hidden{display:none !important;}
+
+  /* Verification Modal */
+  #verificationModal{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,.7);display:flex;justify-content:center;align-items:center;z-index:1000;
+  }
+  #verificationModal > div{
+    background:var(--panel);border-radius:var(--radius-xl);padding:25px; /* Reduced padding */
+    width:min(380px,90vw);border:1px solid var(--border);box-shadow:var(--shadow-1);text-align:center;
+  }
+  #verificationModal h3{
+    margin-bottom:12px;color:var(--text); /* Reduced margin */
+    font-size:clamp(18px,2vw,24px); /* Slightly smaller */
+  }
+  #verificationModal p{
+    color:var(--muted);margin-bottom:16px; /* Reduced margin */
+    line-height:1.4;font-size:14px; /* Smaller font */
+  }
+  #verificationModal .verification-code{
+    display:flex;gap:8px;justify-content:center; /* Reduced gap */
+    margin:16px 0; /* Reduced margin */
+  }
+  #verificationModal .verification-code input{
+    width:45px;height:45px; /* Slightly smaller */
+    text-align:center;font-size:18px;font-weight:bold; /* Smaller font */
+    background:var(--panel-2);border:1px solid var(--border);
+    border-radius:10px;color:var(--text); /* Slightly smaller radius */
+  }
+  #verificationModal .verification-code input:focus{
+    border-color:var(--gold-1);box-shadow:0 0 0 4px rgba(242,195,53,.18);
+  }
+  #verificationModal .resend-link{
+    color:var(--gold-1);cursor:pointer;text-decoration:underline;
+    margin-top:12px;display:inline-block; /* Reduced margin */
+    font-weight:600;font-size:14px; /* Smaller font */
+  }
+  #verificationModal .resend-link:hover{color:var(--gold-2);}
 
   /* ✅ Flatpickr isolation (prevents weird stretching/positioning) */
   .flatpickr-calendar{ z-index: 9999; font-family: inherit; }
@@ -84,59 +152,36 @@
   .flatpickr-months .flatpickr-next-month svg{ width:14px; height:14px; }
 
   @media (max-width:980px){
-    .stage{width:min(1000px,92vw);height:min(900px,86svh);} 
+    .stage{
+      width:min(1000px,98vw); /* Increased for mobile */
+      height:min(900px,94svh); /* Increased for mobile */
+    } 
     .shell{grid-template-columns:1fr;} 
-    .art{min-height:38vh;} 
-    .card{padding:clamp(18px,4vw,28px);border-left:none;border-top:1px solid var(--border);} 
+    .art{min-height:35vh;} /* Reduced art height on mobile */
+    .card{
+      padding:clamp(14px,3vw,24px); /* Reduced padding */
+      border-left:none;border-top:1px solid var(--border);
+    } 
   }
 
-  /* ✅ Notice Modal Styling */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  display: grid;
-  place-items: center;
-  z-index: 99999;
-}
-
-.modal.hidden {
-  display: none;
-}
-
-.modal-content {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: var(--shadow-1);
-  padding: 28px 32px;
-  width: min(90%, 400px);
-  text-align: center;
-}
-
-.modal-content p {
-  font-size: 16px;
-  color: var(--text);
-  margin-bottom: 20px;
-}
-
-/* ✨ Modal Animation */
-@keyframes modalShow {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
+  /* Extra small screens */
+  @media (max-width:768px){
+    .stage{
+      width:98vw;
+      height:96svh;
+    }
+    .stack{
+      width:98%;
+    }
+    .row{
+      flex-direction:column; /* Stack rows vertically on very small screens */
+      gap:5px;
+    }
+    .row > div{
+      width:100%;
+      margin:0 !important;
+    }
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.modal-content {
-  animation: modalShow 0.25s ease forwards;
-  transform-origin: center;
-}
-
 </style>
 </head>
 <body>
@@ -209,6 +254,20 @@
               </div>
             </div>
 
+
+            <label>Student Photo</label>
+<input id="signup-photo" type="file" accept="image/*" required>
+<img id="previewImg" src="" alt="Photo Preview" style="margin-top:8px; max-width:120px; border-radius:10px; cursor:pointer; display:none; border:2px solid var(--gold-1);">
+
+
+<div id="photoPreview" style="margin-bottom:8px; text-align:center;">
+  <img id="previewImg" src="" alt="Photo Preview" style="display:none; width:120px; height:120px; object-fit:cover; border-radius:12px; border:1px solid #ccc;">
+</div>
+
+
+
+
+
             <!-- Campus Dropdown -->
             <label for="signup-campus">Campus</label>
             <select id="signup-campus" required>
@@ -255,7 +314,7 @@
     });
 
     // Campus → College → Course Data
-    const campusData = {
+    let campusData = {
       "PRMSU Iba": {
         "College of Business, Accountancy and Public Administration (CBAPA)": [
           "Bachelor of Science in Accountancy",
@@ -374,6 +433,125 @@
         });
       }
     });
+
+    function normalizeCampusToken(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/^prmsu\s*/i, "")
+        .replace(/\./g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function normalizeCampusLabel(value) {
+      const token = normalizeCampusToken(value);
+      const map = {
+        "iba": "PRMSU Iba",
+        "castillejos": "PRMSU Castillejos",
+        "caste": "PRMSU Castillejos",
+        "san marcelino": "PRMSU San Marcelino",
+        "botolan": "PRMSU Botolan",
+        "candelaria": "PRMSU Candelaria",
+        "masinloc": "PRMSU Masinloc",
+        "sta cruz": "PRMSU Sta. Cruz",
+        "stacruz": "PRMSU Sta. Cruz"
+      };
+      return map[token] || String(value || "").trim();
+    }
+
+    function mergeCampusProgramData(baseData, incomingData) {
+      const merged = {};
+      const addRow = (campus, department, course) => {
+        const c = String(campus || "").trim();
+        const d = String(department || "").trim();
+        const r = String(course || "").trim();
+        if (!c || !d || !r) return;
+        if (!merged[c]) merged[c] = {};
+        if (!merged[c][d]) merged[c][d] = [];
+        if (!merged[c][d].includes(r)) merged[c][d].push(r);
+      };
+
+      Object.entries(baseData || {}).forEach(([campus, departments]) => {
+        Object.entries(departments || {}).forEach(([department, courses]) => {
+          (courses || []).forEach((course) => addRow(campus, department, course));
+        });
+      });
+
+      Object.entries(incomingData || {}).forEach(([campus, departments]) => {
+        Object.entries(departments || {}).forEach(([department, courses]) => {
+          (courses || []).forEach((course) => addRow(campus, department, course));
+        });
+      });
+
+      return merged;
+    }
+
+    function isDepartmentOnlyToken(courseValue) {
+      return String(courseValue || "").trim().toLowerCase() === "__department_only__";
+    }
+
+    window.__loadManagedProgramsForSignup = async function __loadManagedProgramsForSignup(supaClient) {
+      const PROGRAMS_TABLE_CANDIDATES = ["campus_programs", "programs", "courses"];
+      const isMissingTableError = (err) => {
+        const code = String(err?.code || "").trim().toUpperCase();
+        const msg = String(err?.message || "").toLowerCase();
+        return (
+          code === "42P01" ||
+          code === "PGRST205" ||
+          msg.includes("could not find the table") ||
+          msg.includes("does not exist")
+        );
+      };
+
+      let programsTable = null;
+      for (const candidate of PROGRAMS_TABLE_CANDIDATES) {
+        const probe = await supaClient.from(candidate).select("*").limit(1);
+        if (!probe.error) {
+          programsTable = candidate;
+          break;
+        }
+        if (!isMissingTableError(probe.error)) {
+          programsTable = candidate;
+          break;
+        }
+      }
+      if (!programsTable) return;
+
+      let rows = null;
+
+      try {
+        const { data, error } = await supaClient
+          .from(programsTable)
+          .select("*");
+        if (error) {
+          throw error;
+        } else {
+          rows = data || [];
+        }
+      } catch (err) {
+        console.warn("Signup programs fetch error:", err);
+        return;
+      }
+
+      const next = {};
+      (rows || []).forEach((row) => {
+        const campus = normalizeCampusLabel(row?.campus || "");
+        const department = String(row?.department ?? row?.college ?? "").trim();
+        const course = String(row?.course_name ?? row?.course ?? row?.name ?? "").trim();
+        if (isDepartmentOnlyToken(course)) return;
+        if (!campus || !department || !course) return;
+        if (!next[campus]) next[campus] = {};
+        if (!next[campus][department]) next[campus][department] = [];
+        if (!next[campus][department].includes(course)) {
+          next[campus][department].push(course);
+        }
+      });
+
+      if (!Object.keys(next).length) return;
+      campusData = mergeCampusProgramData(campusData, next);
+      campusSelect.dispatchEvent(new Event("change"));
+      collegeSelect.dispatchEvent(new Event("change"));
+    };
   </script>
 
 
@@ -397,6 +575,11 @@ const { createClient } = window.supabase;
 const SUPABASE_URL = "https://qdrnqkoozsloeqzxpgha.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkcm5xa29venNsb2VxenhwZ2hhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODQ5MjgsImV4cCI6MjA3NTE2MDkyOH0.E4Lp4LtyvRfFoImUkZMFyVBM7sro4aoNlQEa7sUIsIs";
 const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+if (typeof window.__loadManagedProgramsForSignup === "function") {
+  window.__loadManagedProgramsForSignup(supa).catch((err) => {
+    console.warn("Managed programs bootstrap failed:", err);
+  });
+}
 
 // --- Modal notice ---
 const modal = document.getElementById("noticeModal");
@@ -433,6 +616,71 @@ document.getElementById('toLogin').addEventListener('click', () => {
 });
 
 // --- SIGN UP ---
+document.addEventListener('DOMContentLoaded', () => {
+  const photoInput = document.getElementById('signup-photo');
+  const photoPreview = document.getElementById('signup-photo-preview');
+
+  if(photoInput && photoPreview){
+    photoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          photoPreview.src = reader.result;
+          photoPreview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    photoPreview.addEventListener('click', () => {
+      if(photoPreview.src) window.open(photoPreview.src, '_blank');
+    });
+  }
+});
+
+function parseBirthdateValue(rawValue) {
+  const raw = String(rawValue || "").trim();
+  if (!raw) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const [y, m, d] = raw.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    return (dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d) ? dt : null;
+  }
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+    const [m, d, y] = raw.split("/").map(Number);
+    const dt = new Date(y, m - 1, d);
+    return (dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d) ? dt : null;
+  }
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+}
+
+function calculateAgeFromBirthdate(birthDate, today = new Date()) {
+  const now = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  let age = now.getFullYear() - birthDate.getFullYear();
+  const monthDiff = now.getMonth() - birthDate.getMonth();
+  const dayDiff = now.getDate() - birthDate.getDate();
+  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) age -= 1;
+  return age;
+}
+
+const signupBirthdateInput = document.getElementById("signup-birthdate");
+const signupAgeInput = document.getElementById("signup-age");
+if (signupBirthdateInput && signupAgeInput) {
+  signupBirthdateInput.addEventListener("change", () => {
+    const parsedBirthdate = parseBirthdateValue(signupBirthdateInput.value);
+    if (!parsedBirthdate) return;
+    const computedAge = calculateAgeFromBirthdate(parsedBirthdate);
+    if (computedAge >= 0) signupAgeInput.value = String(computedAge);
+  });
+}
+
+
 document.getElementById('signup-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = e.submitter;
@@ -449,6 +697,42 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
   const college = document.getElementById('signup-college').value.trim();
   const course = document.getElementById('signup-course').value.trim();
 
+  const photoFile = document.getElementById("signup-photo").files[0];
+
+if (!photoFile) {
+  showNotice("Please upload a student photo.");
+  btnBusy(btn, false);
+  return;
+}
+
+  const parsedBirthdate = parseBirthdateValue(birthdate);
+  if (!parsedBirthdate) {
+    showNotice("Please enter a valid birthdate.");
+    btnBusy(btn, false);
+    return;
+  }
+
+  const today = new Date();
+  if (parsedBirthdate > today) {
+    showNotice("Birthdate cannot be in the future.");
+    btnBusy(btn, false);
+    return;
+  }
+
+  const enteredAge = Number(age);
+  if (!Number.isInteger(enteredAge) || enteredAge <= 0) {
+    showNotice("Please enter a valid age.");
+    btnBusy(btn, false);
+    return;
+  }
+
+  const computedAge = calculateAgeFromBirthdate(parsedBirthdate, today);
+  if (enteredAge !== computedAge) {
+    showNotice(`Age does not match birthdate. Expected age is ${computedAge}.`);
+    btnBusy(btn, false);
+    return;
+  }
+
   // ✅ Validate student number format: XX-X-X-XXXX
   const studentNumberPattern = /^\d{2}-\d-\d-\d{4}$/;
   if (!studentNumberPattern.test(studentNumber)) {
@@ -456,6 +740,8 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
     btnBusy(btn, false);
     return;
   }
+  
+  
 
   try {
     // 1️⃣ Create Supabase Auth Account
@@ -479,38 +765,41 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
     });
     if (authError) throw authError;
 
+    const fileExt = photoFile.name.split('.').pop();
+const photoPath = `students/${studentNumber}_${Date.now()}.${fileExt}`;
+
+const { error: uploadError } = await supa.storage
+  .from("student_profile")
+  .upload(photoPath, photoFile);
+
+if (uploadError) {
+  showNotice("Photo upload failed: " + uploadError.message);
+  btnBusy(btn, false);
+  return;
+}
+
+
     // 2️⃣ Insert into applicants_main
-    const applicantData = {
-      full_name: fullname,
-      email,
-      password,
-      birthdate,
-      age,
-      student_number: studentNumber,
-      phone_number: phone,
-      campus,
-      college,
-      course,
-      created_at: new Date().toISOString()
+   const applicantData = {
+  full_name: fullname,
+  email,
+  password,
+  birthdate,
+  age,
+  student_number: studentNumber,
+  phone_number: phone,
+  campus,
+  college,
+  course,
+  photo_path: photoPath,  // <--- ADD THIS LINE
+  created_at: new Date().toISOString()
+
     };
     const { error: mainError } = await supa.from('applicants_main').insert([applicantData]);
     if (mainError) throw mainError;
 
     // 3️⃣ Insert into campus-specific table
-    const campusTable = {
-      "PRMSU Iba": "applicants_iba",
-      "PRMSU Castillejos": "applicants_castillejos",
-      "PRMSU San Marcelino": "applicants_sanmarcelino",
-      "PRMSU Botolan": "applicants_botolan",
-      "PRMSU Candelaria": "applicants_candelaria",
-      "PRMSU Masinloc": "applicants_masinloc",
-      "PRMSU Sta. Cruz": "applicants_stacruz"
-    }[campus];
-
-    if (campusTable) {
-      const { error: campusError } = await supa.from(campusTable).insert([applicantData]);
-      if (campusError) console.warn('Campus insert error:', campusError.message);
-    }
+    
 
     btnBusy(btn, false);
     showNotice("✅ Sign-up successful! Please check your email to confirm your account.");
@@ -535,6 +824,14 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     const { data: admin, error: adminErr } = await supa.from('admins').select('*').eq('email', email).single();
     if (admin && !adminErr) {
       if (admin.password === password) {
+        // Persist minimal admin context for campus-based filtering
+        try {
+          localStorage.setItem('adminEmail', admin.email || email);
+          localStorage.setItem('adminName', admin.full_name || admin.name || '');
+          localStorage.setItem('adminRole', admin.role || '');
+          localStorage.setItem('adminCampus', admin.campus || '');
+        } catch (_) { /* ignore */ }
+
         showNotice(`Welcome, ${admin.role}!`);
         setTimeout(() => {
           window.location.href = 'admin.html';
@@ -556,6 +853,22 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
       return showNotice("Invalid email or password.");
     }
 
+    try {
+      const { data: { user } } = await supa.auth.getUser();
+      const meta = user?.user_metadata || {};
+      localStorage.setItem('applicantProfileCache', JSON.stringify({
+        full_name: meta.full_name || '',
+        email: user?.email || email,
+        phone_number: meta.phone_number || '',
+        birthdate: meta.birthdate || '',
+        campus: meta.campus || '',
+        college: meta.college || '',
+        course: meta.course || ''
+      }));
+    } catch (_) {
+      // ignore cache issues
+    }
+
     window.location.href = "student.html";
   } catch (err) {
     console.error(err);
@@ -564,5 +877,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   }
 });
   </script>
+  <script src="shared/autocomplete-off.js" defer></script>
 </body>
 </html>
