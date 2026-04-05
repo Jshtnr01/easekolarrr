@@ -1,29 +1,60 @@
-async function sendViaResend(to, subject, message) {
-  const { RESEND_API_KEY, EMAIL_FROM } = process.env;
-  if (!RESEND_API_KEY || !EMAIL_FROM) {
-    throw new Error("Email credentials not configured (RESEND_API_KEY / EMAIL_FROM).");
+import nodemailer from "nodemailer";
+
+let cachedTransporter = null;
+
+function parseSecureFlag(v) {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (!s) return null;
+  return s === "1" || s === "true" || s === "yes";
+}
+
+function getTransporter() {
+  if (cachedTransporter) return cachedTransporter;
+
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
+  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
+    throw new Error(
+      "Email credentials not configured (SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS)."
+    );
   }
 
-  const resp = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
+  const port = Number(SMTP_PORT);
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new Error("Invalid SMTP_PORT. Use a valid integer like 465 or 587.");
+  }
+
+  const envSecure = parseSecureFlag(process.env.SMTP_SECURE);
+  const secure = envSecure == null ? port === 465 : envSecure;
+
+  cachedTransporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port,
+    secure,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
     },
-    body: JSON.stringify({
-      from: EMAIL_FROM,
-      to: [to],
-      subject,
-      text: message,
-    }),
   });
 
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) {
-    const reason = json?.message || json?.error || resp.statusText;
-    throw new Error(`Resend error ${resp.status}: ${reason}`);
+  return cachedTransporter;
+}
+
+async function sendViaSmtp(to, subject, message) {
+  const { EMAIL_FROM, SMTP_USER } = process.env;
+  const fromAddress = String(EMAIL_FROM || SMTP_USER || "").trim();
+  if (!fromAddress) {
+    throw new Error("Sender not configured (EMAIL_FROM or SMTP_USER required).");
   }
-  return json?.id || null;
+
+  const transporter = getTransporter();
+  const info = await transporter.sendMail({
+    from: fromAddress,
+    to,
+    subject,
+    text: message,
+  });
+
+  return info?.messageId || null;
 }
 
 export default async function handler(req, res) {
@@ -44,11 +75,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "to and message required" });
     }
 
-    const emailId = await sendViaResend(toEmail, subj, msg);
+    const emailId = await sendViaSmtp(toEmail, subj, msg);
     return res.status(200).json({ ok: true, email_id: emailId });
   } catch (err) {
     console.error(err);
     return res.status(502).json({ error: String(err) });
   }
 }
-
