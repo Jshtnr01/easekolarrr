@@ -546,6 +546,21 @@ tbody tr:nth-child(even) {
 .table-panel table td:last-child{
   border-right: 0 !important;
 }
+.action-cell{
+  position: relative;
+  overflow: visible !important;
+}
+.action-menu{
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 140px;
+  z-index: 1200;
+}
+.action-menu.up{
+  top: auto;
+  bottom: calc(100% + 4px);
+}
 
 /* Dashboard table column tuning */
 .table-panel table th:nth-child(1),
@@ -1319,11 +1334,28 @@ adminForm.addEventListener("submit", async (e) => {
 window.toggleActionMenu = function(id) {
   const menu = document.getElementById(`actionMenu-${id}`);
   if (!menu) return;
+  const toggleBtn = menu.previousElementSibling;
   // toggle hidden and ensure other menus are closed
   document.querySelectorAll("[id^='actionMenu-']").forEach(m => {
     if (m.id !== menu.id) m.classList.add("hidden");
   });
   menu.classList.toggle("hidden");
+
+  if (menu.classList.contains("hidden")) return;
+  menu.classList.remove("up");
+
+  // Open upward when there is not enough visible space below.
+  const host = menu.closest(".table-scroll");
+  const hostRect = host?.getBoundingClientRect?.() || { top: 0, bottom: window.innerHeight };
+  const btnRect = toggleBtn?.getBoundingClientRect?.() || menu.getBoundingClientRect();
+  const menuHeight = Math.max(menu.offsetHeight || 0, 120);
+  const visibleBottom = Math.min(window.innerHeight, hostRect.bottom);
+  const visibleTop = Math.max(0, hostRect.top);
+  const spaceBelow = visibleBottom - btnRect.bottom;
+  const spaceAbove = btnRect.top - visibleTop;
+  if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+    menu.classList.add("up");
+  }
 };
 
 // helper used by menu items: update status, hide menu, refresh table
@@ -1467,7 +1499,7 @@ async function fetchApplicants() {
           ${status}
         </span>
       </td>
-      <td class="relative">
+      <td class="action-cell">
         <button 
           class="bg-orange-500 text-white px-2 py-1 rounded"
           onclick="toggleActionMenu(${app.id})"
@@ -1475,7 +1507,7 @@ async function fetchApplicants() {
           Action ▼
         </button>
         <div id="actionMenu-${app.id}" 
-             class="hidden absolute right-0 mt-1 bg-white border rounded shadow p-2 z-50">
+             class="hidden action-menu bg-white border rounded shadow p-2">
           <button class="block w-full text-left px-2 py-1 hover:bg-gray-100"
                   onclick="openActionModal(${app.id}, 'Processing')">
             Processing
