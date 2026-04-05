@@ -1353,8 +1353,20 @@ window.toggleActionMenu = function(id) {
   const visibleTop = Math.max(0, hostRect.top);
   const spaceBelow = visibleBottom - btnRect.bottom;
   const spaceAbove = btnRect.top - visibleTop;
-  if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+  if (spaceBelow < menuHeight && spaceAbove >= menuHeight) {
     menu.classList.add("up");
+  }
+
+  // If still clipped by the scroll host, scroll host to reveal the menu.
+  if (host) {
+    requestAnimationFrame(() => {
+      const hRect = host.getBoundingClientRect();
+      const mRect = menu.getBoundingClientRect();
+      const overBottom = mRect.bottom - hRect.bottom;
+      const overTop = hRect.top - mRect.top;
+      if (overBottom > 0) host.scrollTop += overBottom + 8;
+      if (overTop > 0) host.scrollTop -= overTop + 8;
+    });
   }
 };
 
