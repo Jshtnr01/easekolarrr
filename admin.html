@@ -739,7 +739,7 @@ tbody tr:nth-child(even) {
           <span id="actionPreviewName">Applicant</span>
           <span id="actionPreviewContact" style="margin-left:8px; opacity:.9;"></span>
         </p>
-        <label for="actionMessage" style="display:block; font-size:13px; color:#cbd5e1; margin-bottom:6px;">Message to applicant (SMS & in-app)</label>
+        <label for="actionMessage" style="display:block; font-size:13px; color:#cbd5e1; margin-bottom:6px;">Message to applicant (SMS, email & in-app)</label>
         <textarea id="actionMessage" rows="4" style="width:100%; resize:vertical; border-radius:12px; padding:10px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:#fff;"></textarea>
 
         <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
@@ -1724,6 +1724,28 @@ async function confirmAction(){
   } catch (e) {
     console.warn('Local API send error:', e);
     deliveryLogs.push(`SMS: failed (${String(e?.message || e)})`);
+  }
+
+  // 4) Immediate email (same status message)
+  try {
+    const toEmail = String(app.email || '').trim();
+    if (toEmail) {
+      const emailEndpoints = isLocal
+        ? [`${API_BASE}/email/send`, 'https://easekolar.vercel.app/api/email/send']
+        : [`${API_BASE}/email/send`];
+      const emailResult = await postJsonWithFallback(emailEndpoints, {
+        to: toEmail,
+        subject: `Scholarship Application Status: ${newStatus}`,
+        message: statusMessage,
+      });
+      if (emailResult.ok) deliveryLogs.push(`Email: sent via ${emailResult.endpoint}`);
+      else deliveryLogs.push(`Email: failed (${emailResult.error})`);
+    } else {
+      deliveryLogs.push('Email: skipped (missing email)');
+    }
+  } catch (e) {
+    console.warn('Email API send error:', e);
+    deliveryLogs.push(`Email: failed (${String(e?.message || e)})`);
   }
 
   closeActionModal();
