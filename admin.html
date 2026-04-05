@@ -1713,8 +1713,13 @@ async function confirmAction(){
         message: statusMessage,
         status: newStatus,
       });
-      if (smsResult.ok) deliveryLogs.push(`SMS: sent via ${smsResult.endpoint}`);
-      else deliveryLogs.push(`SMS: failed (${smsResult.error})`);
+      if (smsResult.ok) {
+        deliveryLogs.push(`SMS: sent via ${smsResult.endpoint}`);
+      } else if ((smsResult.error || '').toLowerCase().includes('clicksend credentials not configured')) {
+        deliveryLogs.push('SMS: skipped (ClickSend not configured)');
+      } else {
+        deliveryLogs.push(`SMS: failed (${smsResult.error})`);
+      }
     } else {
       console.warn('Invalid phone for applicant id=', id);
       deliveryLogs.push('SMS: skipped (invalid or missing phone number)');
