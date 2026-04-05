@@ -1648,8 +1648,8 @@ async function confirmAction(){
   const message = (document.getElementById('actionMessage').value || '').trim();
   const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   const API_BASE = isLocal
-    ? 'http://127.0.0.1:8787'
-    : 'https://easekolar.vercel.app/api';
+    ? 'http://127.0.0.1:8787/api'
+    : '/api';
   const statusMessage = message || `Your application is now ${newStatus}.`;
   const deliveryLogs = [];
 
@@ -1705,9 +1705,7 @@ async function confirmAction(){
   try {
     const toNorm = normalizePhonePH(app.contact_number || '');
     if (toNorm) {
-      const smsEndpoints = isLocal
-        ? [`${API_BASE}/sms/send`, 'https://easekolar.vercel.app/api/sms/send']
-        : [`${API_BASE}/sms/send`];
+      const smsEndpoints = [`${API_BASE}/sms/send`];
       const smsResult = await postJsonWithFallback(smsEndpoints, {
         applicant_id: id,
         email: app.email || null,
@@ -1730,9 +1728,7 @@ async function confirmAction(){
   try {
     const toEmail = String(app.email || '').trim();
     if (toEmail) {
-      const emailEndpoints = isLocal
-        ? [`${API_BASE}/email/send`, 'https://easekolar.vercel.app/api/email/send']
-        : [`${API_BASE}/email/send`];
+      const emailEndpoints = [`${API_BASE}/email/send`];
       const emailResult = await postJsonWithFallback(emailEndpoints, {
         to: toEmail,
         subject: `Scholarship Application Status: ${newStatus}`,
