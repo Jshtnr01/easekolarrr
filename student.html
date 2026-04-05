@@ -780,18 +780,37 @@
         const ctx = getOrCreateAudioContext();
         if (!ctx) return;
         const now = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, now);
-        osc.frequency.exponentialRampToValueAtTime(660, now + 0.22);
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.26);
+        const master = ctx.createGain();
+        master.gain.value = 0.22;
+        master.connect(ctx.destination);
+
+        const ringBell = (time, baseFreq, loudness) => {
+          const tones = [
+            { type: 'sine', ratio: 1.0, gain: 1.0, decay: 1.15 },
+            { type: 'triangle', ratio: 2.0, gain: 0.35, decay: 0.85 },
+            { type: 'sine', ratio: 2.98, gain: 0.24, decay: 0.68 },
+            { type: 'triangle', ratio: 4.1, gain: 0.14, decay: 0.55 },
+          ];
+
+          tones.forEach((tone) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = tone.type;
+            osc.frequency.setValueAtTime(baseFreq * tone.ratio, time);
+            osc.frequency.exponentialRampToValueAtTime((baseFreq * tone.ratio) * 0.985, time + 0.22);
+            gain.gain.setValueAtTime(0.0001, time);
+            gain.gain.exponentialRampToValueAtTime(loudness * tone.gain, time + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, time + tone.decay);
+            osc.connect(gain);
+            gain.connect(master);
+            osc.start(time);
+            osc.stop(time + tone.decay + 0.06);
+          });
+        };
+
+        // Messenger-like brighter two-hit bell.
+        ringBell(now, 1320, 0.38);
+        ringBell(now + 0.12, 1760, 0.24);
       } catch (_) {
         // ignore audio failures
       }
