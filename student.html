@@ -1047,8 +1047,25 @@ async function fetchNotifications(studentEmail, options = {}) {
   seenNotificationKeys = latestKeys;
   isFirstNotificationsLoad = false;
 
+  const formatNotificationTimestamp = (isoValue) => {
+    if (!isoValue) return "Date unavailable";
+    const dt = new Date(isoValue);
+    if (Number.isNaN(dt.getTime())) return "Date unavailable";
+    return dt.toLocaleString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+
   notiList.innerHTML = "";
   data.forEach((item) => {
+    const messageText = escapeHtml(item.message || "");
+    const scholarshipText = escapeHtml(item.scholarship_program || "General");
+    const receivedAtText = escapeHtml(formatNotificationTimestamp(item.created_at));
     const div = document.createElement("div");
     div.className = "note";
     div.style =
@@ -1059,10 +1076,9 @@ async function fetchNotifications(studentEmail, options = {}) {
         <i class="fa-regular fa-bell"></i>
       </div>
       <div>
-        <strong>${item.message}</strong>
-        <small style="display:block;color:var(--muted)">Related to: ${
-          item.scholarship_program || "General"
-        }</small>
+        <strong>${messageText}</strong>
+        <small style="display:block;color:var(--muted)">Related to: ${scholarshipText}</small>
+        <small style="display:block;color:var(--muted)">Received: ${receivedAtText}</small>
       </div>
       <i class="fa-solid fa-ellipsis-vertical" style="color:#9AA5B5"></i>
     `;
