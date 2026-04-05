@@ -535,8 +535,11 @@ tbody tr:nth-child(even) {
 }
 .table-scroll{
   width: 100%;
-  max-height: calc(100svh - 320px);
+  height: min(520px, calc(100svh - 320px));
+  min-height: min(520px, calc(100svh - 320px));
   overflow: auto;
+  padding-bottom: 14px;
+  box-sizing: border-box;
   scrollbar-gutter: stable both-edges;
 }
 .table-scroll table{
@@ -600,6 +603,10 @@ tbody tr:nth-child(even) {
   overflow: auto;
   border-radius: 12px;
   background: transparent;
+  height: min(520px, calc(100svh - 320px));
+  min-height: min(520px, calc(100svh - 320px));
+  padding-bottom: 14px;
+  box-sizing: border-box;
 }
 .table-panel table{
   width: 100%;
