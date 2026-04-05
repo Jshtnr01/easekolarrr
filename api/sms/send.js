@@ -33,7 +33,18 @@ async function sendViaClickSend(to, body) {
   });
   const j = await r.json().catch(() => ({}));
   const first = j?.data?.messages?.[0];
-  if (!r.ok || first?.status !== 'SUCCESS') {
+  const normalizedStatus = String(first?.status || '').trim().toUpperCase();
+  const queuedByMessage = String(j?.response_msg || '').toLowerCase().includes('queued for delivery');
+  const accepted =
+    r.ok &&
+    (
+      normalizedStatus === 'SUCCESS' ||
+      normalizedStatus === 'QUEUED' ||
+      normalizedStatus === 'PENDING' ||
+      queuedByMessage
+    );
+
+  if (!accepted) {
     const code = j?.http_code ?? r.status;
     const errTxt = first?.error ?? j?.response_msg ?? r.statusText;
     throw new Error(`ClickSend error ${code}: ${errTxt}`);
@@ -98,4 +109,3 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: String(e) });
   }
 }
-
