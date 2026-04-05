@@ -637,7 +637,7 @@ async function handleApplicationSubmit(ev) {
       if (isEmbeddedMode()) {
         showResultMessage("", "success");
       } else {
-        showResultMessage(`Application submitted successfully (Ref #${inserted.id}, Campus: ${payload.campus || "N/A"}).`, "success");
+        showResultMessage(`Application submitted successfully (Campus: ${payload.campus || "N/A"}).`, "success");
         showToast("Application submitted successfully!");
       }
       notifySubmissionSuccessToParent(inserted.id, payload.campus || "");
@@ -2193,7 +2193,7 @@ async function prefillFromCurrentUser() {
           if (isEmbeddedMode()) {
             showResultMessage("", "success");
           } else {
-            showResultMessage(`Application submitted successfully (Ref #${inserted.id}, Campus: ${payload.campus || "N/A"}).`, "success");
+            showResultMessage(`Application submitted successfully (Campus: ${payload.campus || "N/A"}).`, "success");
             showToast("Application submitted successfully!");
           }
           notifySubmissionSuccessToParent(inserted.id, payload.campus || "");
