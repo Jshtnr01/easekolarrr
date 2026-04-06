@@ -52,6 +52,7 @@
 #sidebar-root .admin-menu h5{ font-size:12px; color:#7D8AA3; letter-spacing:.4px; margin:6px 10px; text-transform:uppercase; font-weight:800; }
 #sidebar-root .admin-menu{ display:grid; gap:6px; align-content:start; }
 #sidebar-root .admin-menu a{ display:flex; align-items:center; gap:12px; padding:12px 12px; border-radius:12px; text-decoration:none; color:#3B4A5E; font-weight:700; }
+#sidebar-root .admin-menu a i{ width:20px; text-align:center; font-size:15px; }
 #sidebar-root .admin-menu a:hover,
 #sidebar-root .admin-menu a.active{ background:color-mix(in oklab, var(--primary-100, #eaf1ff) 60%, white 0%); color:var(--primary, #1c3d77); box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--primary, #1c3d77) 22%, var(--line, #d5deec)); }
 #sidebar-root .admin-sidebar-bottom{ margin-top:auto; }
@@ -89,6 +90,7 @@
   #sidebar-root .admin-mode-toggle small{ display:none; }
   #sidebar-root .admin-menu h5{ display:none; }
   #sidebar-root .admin-menu a{ justify-content:center; padding:10px 8px; }
+  #sidebar-root .admin-menu a i{ width:auto; }
   #sidebar-root .admin-menu a span{ display:none; }
   #sidebar-root .admin-profile-meta{ display:none !important; }
   #sidebar-root .admin-logout-btn span{ display:none !important; }
@@ -125,19 +127,22 @@
     text-align:center;
   }
   #sidebar-root .admin-menu a span{ display:none; }
-  #sidebar-root .admin-menu a::after{
-    content: attr(data-mobile-label);
-    font-size:11px;
-    font-weight:800;
-    line-height:1.1;
-    color:inherit;
-  }
+  #sidebar-root .admin-menu a i{ font-size:16px; }
   .admin-shell{ width:100% !important; height:auto !important; border-radius:0 !important; display:block !important; }
   .content{ padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important; }
 }
 `;
 
     document.head.appendChild(style);
+  }
+
+  function ensureIconFont(){
+    if (document.getElementById('adminSidebarFaLink')) return;
+    const link = document.createElement('link');
+    link.id = 'adminSidebarFaLink';
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css';
+    document.head.appendChild(link);
   }
 
   function getInitialTheme(){
@@ -183,6 +188,7 @@
     if (!root) return;
 
     ensureSidebarStyles();
+    ensureIconFont();
     setTheme(getInitialTheme());
 
     try {
