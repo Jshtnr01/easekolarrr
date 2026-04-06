@@ -147,44 +147,30 @@
     .kv-head,
     .kv-values {
       text-align: left;
-      vertical-align: top;
+      vertical-align: middle;
       line-height: 1.45;
-    }
-    .kv-head {
-      color: var(--th-text);
-      font-weight: 700;
-      white-space: pre-line;
-      width: 160px;
-    }
-    .kv-values .line {
-      margin: 0 0 4px;
-      word-break: break-word;
-    }
-    .kv-values .line:last-child {
-      margin-bottom: 0;
-    }
-    .kv-head,
-    .kv-values{
-      padding: 0;
-    }
-    .kv-head .line,
-    .kv-values .line{
       padding: 8px 10px;
       border-bottom: 1px solid var(--row-line);
-      margin: 0;
     }
-    .kv-head .line:last-child,
-    .kv-values .line:last-child{
-      border-bottom: 0;
-    }
-    .kv-head .line{
+    .kv-head {
       font-weight: 700;
       color: var(--th-text);
+      width: 140px;
       background: color-mix(in oklab, var(--th-bg) 70%, white 30%);
     }
-    .kv-values .line{
+    .kv-values {
       color: var(--table-text);
       word-break: break-word;
+    }
+    .app-num {
+      vertical-align: middle;
+      font-weight: 600;
+      color: var(--table-text);
+      border-bottom: 1px solid var(--row-line);
+      min-width: 34px;
+    }
+    .app-row-start td {
+      border-top: 10px solid transparent;
     }
 
     .table-wrap {
@@ -341,23 +327,23 @@ function renderApplications() {
 
   filtered.forEach((row, index) => {
     const statusClass = row.status?.toLowerCase() || '';
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td class="kv-head">
-        <p class="line">Name</p>
-        <p class="line">Program</p>
-        <p class="line">Campus</p>
-        <p class="line">Status</p>
-      </td>
-      <td class="kv-values">
-        <p class="line">${row.Name || 'N/A'}</p>
-        <p class="line">${row.scholarship_program || 'N/A'}</p>
-        <p class="line">${row.campus || 'N/A'}</p>
-        <p class="line"><span class="status ${statusClass}">${row.status || 'N/A'}</span></p>
-      </td>
-    `;
-    tbody.appendChild(tr);
+    const pairs = [
+      { key: 'Name', value: row.Name || 'N/A' },
+      { key: 'Program', value: row.scholarship_program || 'N/A' },
+      { key: 'Campus', value: row.campus || 'N/A' },
+      { key: 'Status', value: `<span class="status ${statusClass}">${row.status || 'N/A'}</span>` },
+    ];
+
+    pairs.forEach((pair, pairIdx) => {
+      const tr = document.createElement("tr");
+      if (pairIdx === 0) tr.classList.add("app-row-start");
+      tr.innerHTML = `
+        ${pairIdx === 0 ? `<td class="app-num" rowspan="4">${index + 1}</td>` : ''}
+        <td class="kv-head">${pair.key}</td>
+        <td class="kv-values">${pair.value}</td>
+      `;
+      tbody.appendChild(tr);
+    });
   });
 }
 
