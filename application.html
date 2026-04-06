@@ -774,6 +774,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       preview.innerHTML = `<img alt="${req} preview" />`;
       const cogStatus = document.createElement("div");
       cogStatus.className = "status";
+      cogStatus.id = `req_cog_status_${idx}`;
+      input.dataset.statusId = cogStatus.id;
 
       const img = preview.querySelector("img");
       let objectUrl = null;
@@ -819,11 +821,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   reqUploads.addEventListener("change", async (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLInputElement)) return;
-    if (target.type !== "file") return;
+    if (!target || String(target.tagName || "").toUpperCase() !== "INPUT") return;
+    if (String(target.type || "").toLowerCase() !== "file") return;
     if (target?.dataset?.requirementType !== "certificate_of_grades") return;
-    const cell = target.closest("div");
-    const statusEl = cell?.querySelector?.(".status") || null;
+    const statusEl = target?.dataset?.statusId
+      ? document.getElementById(target.dataset.statusId)
+      : target.closest("div")?.querySelector?.(".status");
+    const selectedFile = target.files?.[0];
+    if (selectedFile) {
+      setCogValidationFeedback(statusEl, "neutral", `COG selected: ${selectedFile.name}. Checking...`);
+    }
     try {
       await validateCogInputLive(target, statusEl);
     } catch (err) {
@@ -1845,7 +1852,8 @@ async function prefillFromCurrentUser() {
     const cogInput = allInputs.find((inp) => {
       return (
         inp?.dataset?.requirementType === "certificate_of_grades" ||
-        isCertificateOfGradesRequirement(inp?.dataset?.requirementLabel || inp?.name || "")
+        isCertificateOfGradesRequirement(inp?.dataset?.requirementLabel || inp?.name || "") ||
+        String(inp?.name || "").toLowerCase().includes("grades")
       );
     });
 
@@ -1998,6 +2006,8 @@ async function prefillFromCurrentUser() {
       preview.innerHTML = `<img alt="${req} preview" />`;
       const cogStatus = document.createElement("div");
       cogStatus.className = "status";
+      cogStatus.id = `req_cog_status_${idx}`;
+      input.dataset.statusId = cogStatus.id;
 
       const img = preview.querySelector("img");
       let objectUrl = null;
