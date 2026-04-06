@@ -491,6 +491,7 @@ html.embedded .floating-apply{
     let selectedScholarshipName = "";
     let selectedScholarshipId = "";
     let selectedScholarshipRequirements = "";
+    let selectedScholarshipRequiredGrade = "";
    
     function closeModal(){ modal.style.display = 'none'; }
 
@@ -734,18 +735,19 @@ function extractScholarshipRequirements(sch) {
 
 function getCardSelectionPayload(programName) {
   const target = (programName || "").trim().toLowerCase();
-  if (!target) return { id: "", requirements: [] };
+  if (!target) return { id: "", requirements: [], grade: "" };
   const card = Array.from(document.querySelectorAll(".grid .card")).find((c) => {
     const title = (c.querySelector("h3")?.textContent || "").trim().toLowerCase();
     return title === target;
   });
-  if (!card) return { id: "", requirements: [] };
+  if (!card) return { id: "", requirements: [], grade: "" };
   const id = String(card.dataset.scholarshipId || "").trim();
+  const grade = String(card.dataset.requiredGrade || "").trim();
   let requirements = normalizeScholarshipRequirements(card.dataset.benefits || "[]");
   if (!requirements.length) {
     requirements = normalizeScholarshipRequirements(card.dataset.requirementsRaw || "[]");
   }
-  return { id, requirements };
+  return { id, requirements, grade };
 }
 
 function buildApplicationUrl(program, scholarshipId, requirements, theme) {
@@ -770,10 +772,19 @@ function sendApplicationContext(frame, program, scholarshipId, requirements) {
   [120, 300, 650, 1100].forEach((ms) => setTimeout(fire, ms));
 }
 
-function forceRenderRequirementsInApp(frame, requirements) {
+function forceRenderRequirementsInApp(frame, requirements, requiredGradeRaw = "") {
   if (!frame) return false;
   const reqs = normalizeScholarshipRequirements(requirements);
   if (!reqs.length) return false;
+  const requiredGrade = Number.parseFloat(String(requiredGradeRaw || "").replace(/[^0-9.]/g, ""));
+  const hasRequiredGrade = Number.isFinite(requiredGrade);
+
+  const isCogRequirement = (value) => {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .includes("certificate of grades");
+  };
 
   const render = () => {
     try {
@@ -813,16 +824,119 @@ function forceRenderRequirementsInApp(frame, requirements) {
         input.name = String(req || "").replace(/\s+/g, "_").toLowerCase();
         input.className = "sr-only";
         input.required = true;
+        input.dataset.requirementLabel = req;
+        const isCog = isCogRequirement(req);
+        if (isCog) input.dataset.requirementType = "certificate_of_grades";
 
-        input.addEventListener("change", () => {
+        const statusEl = doc.createElement("div");
+        statusEl.className = "status";
+        statusEl.style.display = "none";
+
+        const setStatus = (tone, message) => {
+          if (!message) {
+            statusEl.className = "status";
+            statusEl.textContent = "";
+            statusEl.style.display = "none";
+            return;
+          }
+          statusEl.className = `status ${tone || "neutral"}`;
+          statusEl.textContent = message;
+          statusEl.style.display = "block";
+        };
+
+        const parseCogMetrics = (text) => {
+          const src = String(text || "");
+          const compact = src.replace(/\s+/g, " ");
+          const gwaMatch = compact.match(/\b(?:GWA|General Weighted Average)\b[^0-9]{0,20}([0-9]{1,3}(?:\.[0-9]+)?)/i);
+          const gwa = gwaMatch ? Number.parseFloat(gwaMatch[1]) : null;
+          const lines = src.split(/\r?\n/).map((v) => v.trim()).filter(Boolean);
+          const subjectGrades = [];
+          for (const line of lines) {
+            if (!/[a-z]/i.test(line)) continue;
+            const nums = line.match(/\b([0-9]{2,3}(?:\.[0-9]+)?)\b/g);
+            if (!nums?.length) continue;
+            const candidates = nums
+              .map((n) => Number.parseFloat(n))
+              .filter((n) => Number.isFinite(n) && n >= 50 && n <= 100);
+            if (!candidates.length) continue;
+            subjectGrades.push(candidates[candidates.length - 1]);
+          }
+          return {
+            gwa,
+            subjectGrades,
+            minSubjectGrade: subjectGrades.length ? Math.min(...subjectGrades) : null,
+          };
+        };
+
+        const extractPdfText = async (file) => {
+          const w = frame.contentWindow;
+          if (!w?.pdfjsLib) {
+            throw new Error("PDF parser is unavailable in application frame.");
+          }
+          const bytes = await file.arrayBuffer();
+          const loading = w.pdfjsLib.getDocument({ data: bytes });
+          const pdf = await loading.promise;
+          const chunks = [];
+          for (let p = 1; p <= pdf.numPages; p += 1) {
+            const page = await pdf.getPage(p);
+            const content = await page.getTextContent();
+            const txt = (content.items || [])
+              .map((it) => String(it.str || "").trim())
+              .filter(Boolean)
+              .join(" ");
+            chunks.push(txt);
+          }
+          return chunks.join("\n");
+        };
+
+        input.addEventListener("change", async () => {
           const file = input.files?.[0];
           const textEl = doc.getElementById(`req_file_forced_label_${idx}`);
           if (textEl) textEl.textContent = file?.name || "Select file";
+          if (!isCog) return;
+          if (!file) {
+            setStatus("", "");
+            return;
+          }
+          setStatus("neutral", `COG selected: ${file.name}. Checking...`);
+          const isPdf = file.type === "application/pdf" || String(file.name || "").toLowerCase().endsWith(".pdf");
+          if (!isPdf) {
+            setStatus("fail", "For grade checking, upload Certificate of Grades as a PDF with selectable text.");
+            return;
+          }
+          try {
+            const text = await extractPdfText(file);
+            const metrics = parseCogMetrics(text);
+            if (metrics.gwa == null && (!metrics.subjectGrades.length || metrics.minSubjectGrade == null)) {
+              setStatus("fail", "No readable GWA or subject grades were detected in this file.");
+              return;
+            }
+            if (metrics.gwa == null) {
+              setStatus("fail", "GWA was not detected in the uploaded Certificate of Grades.");
+              return;
+            }
+            if (!metrics.subjectGrades.length || metrics.minSubjectGrade == null) {
+              setStatus("fail", "Subject grades were not detected in the uploaded Certificate of Grades.");
+              return;
+            }
+            if (!hasRequiredGrade) {
+              setStatus("neutral", `Readable grades detected. GWA: ${metrics.gwa}. Lowest subject grade: ${metrics.minSubjectGrade}.`);
+              return;
+            }
+            if (metrics.gwa < requiredGrade || metrics.minSubjectGrade < requiredGrade) {
+              setStatus("fail", `Below requirement (${requiredGrade}). Detected GWA: ${metrics.gwa}. Lowest subject grade: ${metrics.minSubjectGrade}.`);
+              return;
+            }
+            setStatus("ok", `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Lowest subject grade: ${metrics.minSubjectGrade}.`);
+          } catch (err) {
+            setStatus("fail", String(err?.message || err));
+          }
         });
 
         fileLabel.appendChild(input);
         cell.appendChild(label);
         cell.appendChild(fileLabel);
+        cell.appendChild(statusEl);
         uploads.appendChild(cell);
       });
       return true;
@@ -1117,6 +1231,7 @@ async function loadAdminScholarships(){
       );
     }
     card.dataset.scholarshipId = String(sch.id || "");
+    card.dataset.requiredGrade = String(sch.grade || "");
     card.dataset.benefits = JSON.stringify(schRequirements);
     card.dataset.requirementsRaw = JSON.stringify(
       sch.requirements ??
@@ -1148,11 +1263,13 @@ async function loadAdminScholarships(){
         selectedScholarshipName = card.dataset.title || sch.name || "";
         selectedScholarshipId = String(sch.id || "");
         selectedScholarshipRequirements = JSON.stringify(schRequirements);
+        selectedScholarshipRequiredGrade = String(sch.grade || "");
         try {
           sessionStorage.setItem("selectedScholarshipPayload", JSON.stringify({
             id: selectedScholarshipId,
             name: selectedScholarshipName,
-            requirements: schRequirements
+            requirements: schRequirements,
+            grade: selectedScholarshipRequiredGrade
           }));
         } catch (_) {}
         const list = document.getElementById('list');
@@ -1270,7 +1387,7 @@ async function loadAdminScholarships(){
           attachAppFrameAutoHeight(frame);
           forwardThemeToAppFrame();
           sendApplicationContext(frame, programName, String(sch.id || ""), schRequirements);
-          forceRenderRequirementsInApp(frame, schRequirements);
+          forceRenderRequirementsInApp(frame, schRequirements, String(sch.grade || ""));
           attachParentSubmitBridge(frame, programName, String(sch.id || ""), schRequirements);
           let tries = 0;
           const max = 60; // ~9s
@@ -1290,11 +1407,13 @@ async function loadAdminScholarships(){
       selectedScholarshipName = card.dataset.title || "";
       selectedScholarshipId = String(sch.id || "");
       selectedScholarshipRequirements = JSON.stringify(schRequirements);
+      selectedScholarshipRequiredGrade = String(sch.grade || "");
       try {
         sessionStorage.setItem("selectedScholarshipPayload", JSON.stringify({
           id: selectedScholarshipId,
           name: selectedScholarshipName,
-          requirements: schRequirements
+          requirements: schRequirements,
+          grade: selectedScholarshipRequiredGrade
         }));
       } catch (_) {}
       document.getElementById("modalTitle").textContent = card.dataset.title;
@@ -1569,13 +1688,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!selectedScholarshipRequirements && fallback.requirements.length) {
           selectedScholarshipRequirements = JSON.stringify(fallback.requirements);
         }
+        if (!selectedScholarshipRequiredGrade && fallback.grade) {
+          selectedScholarshipRequiredGrade = String(fallback.grade);
+        }
       }
       const normalizedSelectedReqs = normalizeScholarshipRequirements(selectedScholarshipRequirements || "[]");
       try {
         sessionStorage.setItem("selectedScholarshipPayload", JSON.stringify({
           id: String(selectedScholarshipId || ""),
           name: selectedProgram,
-          requirements: normalizedSelectedReqs
+          requirements: normalizedSelectedReqs,
+          grade: String(selectedScholarshipRequiredGrade || "")
         }));
       } catch (_) {}
       const list = document.getElementById("list");
@@ -1591,7 +1714,7 @@ document.addEventListener("DOMContentLoaded", () => {
           attachAppFrameAutoHeight(frame);
           forwardThemeToAppFrame();
           sendApplicationContext(frame, selectedProgram, selectedScholarshipId || "", normalizedSelectedReqs);
-          forceRenderRequirementsInApp(frame, normalizedSelectedReqs);
+          forceRenderRequirementsInApp(frame, normalizedSelectedReqs, String(selectedScholarshipRequiredGrade || ""));
           forcePopulateEmbeddedApplication(frame, selectedProgram);
           attachParentSubmitBridge(frame, selectedProgram, selectedScholarshipId || "", normalizedSelectedReqs);
         }, { once: true });
@@ -1621,13 +1744,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!selectedScholarshipRequirements && fallback.requirements.length) {
           selectedScholarshipRequirements = JSON.stringify(fallback.requirements);
         }
+        if (!selectedScholarshipRequiredGrade && fallback.grade) {
+          selectedScholarshipRequiredGrade = String(fallback.grade);
+        }
       }
       const normalizedSelectedReqs = normalizeScholarshipRequirements(selectedScholarshipRequirements || "[]");
       try {
         sessionStorage.setItem("selectedScholarshipPayload", JSON.stringify({
           id: String(selectedScholarshipId || ""),
           name: selectedProgram,
-          requirements: normalizedSelectedReqs
+          requirements: normalizedSelectedReqs,
+          grade: String(selectedScholarshipRequiredGrade || "")
         }));
       } catch (_) {}
       if (selectedProgram) {
