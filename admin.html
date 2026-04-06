@@ -659,6 +659,81 @@ tbody tr:nth-child(even) {
   right: auto;
   left: 0;
 }
+
+/* Mobile parity with student dashboard cards + tracking table */
+@media (max-width:640px){
+  .card-container{
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 14px !important;
+  }
+  .card-container .card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 12px;
+    border-radius:16px;
+    border:0;
+    box-shadow:none;
+  }
+  .card-container .card::before{
+    content:"";
+    width:38px;
+    height:38px;
+    border-radius:12px;
+    display:grid;
+    place-items:center;
+    font-size:16px;
+    font-weight:800;
+    color:#1f2a37;
+    flex:0 0 38px;
+  }
+  .card-container .card[data-variant="approved"]::before{ content:"\2713"; background:#F4D9EA; }
+  .card-container .card[data-variant="pending"]::before{ content:"\25F7"; background:#DACDFF; }
+  .card-container .card[data-variant="denied"]::before{ content:"\2715"; background:#F4D3E2; }
+  .card-container .card[data-variant="total"]::before{ content:"\25A6"; background:#CFE1FF; }
+  .card-container .kpi-value{ font-size:34px; line-height:1; }
+  .card-container .kpi-label{ font-size:12px; font-weight:800; margin-top:3px; }
+
+  .table-scroll{
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: auto !important;
+  }
+  .table-scroll table{
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+  .table-scroll td.app-num{
+    width:24px;
+    min-width:24px;
+    text-align:center;
+    vertical-align:middle;
+    font-weight:600;
+    color:#334155;
+    border-bottom:1px solid var(--border) !important;
+  }
+  .table-scroll td.kv-head,
+  .table-scroll td.kv-values{
+    padding:8px 10px !important;
+    border-bottom:1px solid var(--border) !important;
+    vertical-align:middle;
+  }
+  .table-scroll td.kv-head{
+    width:108px;
+    font-weight:700;
+    color:#37527c;
+    background:#edf3fb;
+  }
+  .table-scroll td.kv-values{
+    word-break:break-word;
+    overflow-wrap:anywhere;
+    white-space:normal;
+  }
+  .table-scroll tr.app-row-start td{
+    border-top:10px solid transparent !important;
+  }
+}
 [data-theme='dark'] .table-panel table th{
   background-color: #14284d !important;
   color: #b8c8e6 !important;
@@ -1113,7 +1188,7 @@ window.closeFileMenu = function() {
 
 async function loadDashboardStats() {
   try {
-    // ✅ Use 'supabase' (not supabaseClient)
+    // [OK] Use 'supabase' (not supabaseClient)
     const { data, error } = await supabase
       .from("applicants_iskolar")
       .select("status")
@@ -1137,9 +1212,9 @@ async function loadDashboardStats() {
     document.getElementById("approvedApps").textContent = approved;
     document.getElementById("deniedApps").textContent = rejected;
 
-    console.log("✅ Dashboard stats updated:", { total, pending, approved, denied });
+    console.log("[OK] Dashboard stats updated:", { total, pending, approved, denied });
   } catch (err) {
-    console.error("❌ Error loading dashboard stats:", err.message);
+    console.error("[ERROR] Error loading dashboard stats:", err.message);
   }
 }
 
@@ -1221,9 +1296,9 @@ setupAdminRealtime();
 
       if (error) {
         console.error("Error saving scholarship:", error);
-        alert("❌ Failed to save scholarship. Check console.");
+        alert("[ERROR] Failed to save scholarship. Check console.");
       } else {
-        alert("✅ Scholarship saved to Supabase!");
+        alert("[OK] Scholarship saved to Supabase!");
         formModal.style.display = "none";
         scholarshipForm.reset();
         requirements = [];
@@ -1284,9 +1359,9 @@ adminForm.addEventListener("submit", async (e) => {
 
   if (error) {
     console.error("Error adding admin:", error);
-    alert("❌ Failed to add admin. Check console for details.");
+    alert("[ERROR] Failed to add admin. Check console for details.");
   } else {
-    alert("✅ Admin added successfully!");
+    alert("[OK] Admin added successfully!");
     adminForm.reset();
     adminModal.style.display = "none";
   }
@@ -1347,7 +1422,7 @@ adminForm.addEventListener("submit", async (e) => {
       addCard.style.color = "#fff";
       addCard.innerHTML = `
         <div style="text-align:center;">
-          <div style="font-size:40px; margin-bottom:8px;">➕</div>
+          <div style="font-size:40px; margin-bottom:8px;">+</div>
           <h3 style="margin:0; font-size:16px;">Add Scholarship</h3>
         </div>
       `;
@@ -1417,11 +1492,11 @@ window._updateStatusAndClose = async function(id, newStatus) {
       if (error) throw error;
       // refresh table if you have fetchApplicants()
       if (typeof window.fetchApplicants === "function") window.fetchApplicants();
-      alert(`✅ Applicant status updated to ${newStatus}`);
+      alert(`[OK] Applicant status updated to ${newStatus}`);
     }
   } catch (err) {
     console.error("Error updating status from dropdown:", err);
-    alert("❌ Failed to update status. Check console.");
+    alert("[ERROR] Failed to update status. Check console.");
   }
 };
 
@@ -1453,15 +1528,32 @@ if (statusFilterEl) {
 /// === FETCH ALL APPLICANTS ===
 async function fetchApplicants() {
   const tableBody = document.getElementById("appTable");
+  const tableHead = document.querySelector(".table-scroll thead");
+  const isMobileAdminTable = window.matchMedia("(max-width: 640px)").matches;
+  const colSpan = isMobileAdminTable ? 3 : 8;
+
   if (!tableBody) {
-    console.error("❌ Table element with ID 'appTable' not found in DOM.");
+    console.error("Table element with ID 'appTable' not found in DOM.");
     return;
   }
 
-  // Show loading
-  tableBody.innerHTML = "<tr><td colspan='8'>Loading applicants...</td></tr>";
+  if (tableHead) {
+    tableHead.innerHTML = isMobileAdminTable
+      ? "<tr><th>#</th><th></th><th></th></tr>"
+      : `<tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Scholarship</th>
+          <th>Campus</th>
+          <th>Address</th>
+          <th>Files</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>`;
+  }
 
-  // Fetch data from Supabase
+  tableBody.innerHTML = `<tr><td colspan='${colSpan}'>Loading applicants...</td></tr>`;
+
   const { data, error } = await supabase
     .from("applicants_iskolar")
     .select("*")
@@ -1469,31 +1561,27 @@ async function fetchApplicants() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("❌ Error fetching applicants:", error);
-    tableBody.innerHTML =
-      "<tr><td colspan='8'>Failed to load applicants (check console)</td></tr>";
+    console.error("Error fetching applicants:", error);
+    tableBody.innerHTML = `<tr><td colspan='${colSpan}'>Failed to load applicants (check console)</td></tr>`;
     return;
   }
 
   if (!data || data.length === 0) {
-    tableBody.innerHTML =
-      "<tr><td colspan='8'>No applicants found in database.</td></tr>";
+    tableBody.innerHTML = `<tr><td colspan='${colSpan}'>No applicants found in database.</td></tr>`;
     return;
   }
 
   window.allApplicants = data;
 
-  // Strict dashboard visibility: only Pending/Processing
   const filter = (currentStatusFilter || 'All').toLowerCase();
   const visibleApplicants = data.filter((app) => {
     const status = (app.status || 'Pending').trim().toLowerCase();
     const isUnderReview = (status === 'pending' || status === 'processing');
-    if (!isUnderReview) return false; // hide approved/rejected from dashboard
-    if (filter === 'all') return true; // show both
-    return status === filter; // show specific (Pending or Processing)
+    if (!isUnderReview) return false;
+    if (filter === 'all') return true;
+    return status === filter;
   });
 
-  // KPI Counters
   let approvedCount = 0;
   let rejectedCount = 0;
   let pendingCount = 0;
@@ -1505,10 +1593,8 @@ async function fetchApplicants() {
     else if (normalizedStatus === "pending" || normalizedStatus === "processing") pendingCount++;
   });
 
-  // Clear table
   tableBody.innerHTML = "";
 
-  // Render only visible applicants
   visibleApplicants.forEach((app, index) => {
     const status = app.status || "Pending";
     const normalizedStatus = String(status).trim().toLowerCase();
@@ -1519,60 +1605,60 @@ async function fetchApplicants() {
       normalizedStatus === "rejected" ? "status-rejected" :
       "status-default";
 
-    const tr = document.createElement("tr");
-    tr.setAttribute("data-id", app.id);
+    const nameValue = `<div>${app.Name || "N/A"}</div><div style="font-size:12px; color:#6b7280">${(app.email || "").trim()}${(app.contact_number ? ` • ${app.contact_number}` : "")}</div>`;
 
-    tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td><div>${app.Name || "N/A"}</div><div style="font-size:12px; color:#6b7280">${(app.email || "").trim()}${(app.contact_number ? ` • ${app.contact_number}` : "")}</div></td>
-      <td>${app.scholarship_program || "N/A"}</td>
-      <td>${app.campus || "N/A"}</td>
-      <td>${app.address || "N/A"}</td>
-      <td class="text-center">
-        <button class="bg-blue-500 text-white px-2 py-1 rounded" onclick="openFileMenu(${app.id})">
-          Files ▼
-        </button>
-      </td>
-      <td>
-        <span class="status-pill ${statusClass}">
-          ${status}
-        </span>
-      </td>
-      <td class="action-cell">
-        <button 
-          class="bg-orange-500 text-white px-2 py-1 rounded"
-          onclick="toggleActionMenu(${app.id})"
-        >
-          Action ▼
-        </button>
-        <div id="actionMenu-${app.id}" 
-             class="hidden action-menu bg-white border rounded shadow p-2">
-          <button class="block w-full text-left px-2 py-1 hover:bg-gray-100"
-                  onclick="openActionModal(${app.id}, 'Processing')">
-            Processing
-          </button>
-          <button class="block w-full text-left px-2 py-1 hover:bg-gray-100"
-                  onclick="openActionModal(${app.id}, 'Approved')">
-            Approved
-          </button>
-          <button class="block w-full text-left px-2 py-1 hover:bg-gray-100"
-                  onclick="openActionModal(${app.id}, 'Rejected')">
-            Rejected
-          </button>
-        </div>
-      </td>
-    `;
+    if (!isMobileAdminTable) {
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-id", app.id);
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${nameValue}</td>
+        <td>${app.scholarship_program || "N/A"}</td>
+        <td>${app.campus || "N/A"}</td>
+        <td>${app.address || "N/A"}</td>
+        <td class="text-center"><button class="bg-blue-500 text-white px-2 py-1 rounded" onclick="openFileMenu(${app.id})">Files v</button></td>
+        <td><span class="status-pill ${statusClass}">${status}</span></td>
+        <td class="action-cell">
+          <button class="bg-orange-500 text-white px-2 py-1 rounded" onclick="toggleActionMenu(${app.id})">Action v</button>
+          <div id="actionMenu-${app.id}" class="hidden action-menu bg-white border rounded shadow p-2">
+            <button class="block w-full text-left px-2 py-1 hover:bg-gray-100" onclick="openActionModal(${app.id}, 'Processing')">Processing</button>
+            <button class="block w-full text-left px-2 py-1 hover:bg-gray-100" onclick="openActionModal(${app.id}, 'Approved')">Approved</button>
+            <button class="block w-full text-left px-2 py-1 hover:bg-gray-100" onclick="openActionModal(${app.id}, 'Rejected')">Rejected</button>
+          </div>
+        </td>
+      `;
+      tableBody.appendChild(tr);
+      return;
+    }
 
-    tableBody.appendChild(tr);
+    const details = [
+      { key: "Name", value: nameValue },
+      { key: "Scholarship", value: `${app.scholarship_program || "N/A"}` },
+      { key: "Campus", value: `${app.campus || "N/A"}` },
+      { key: "Address", value: `${app.address || "N/A"}` },
+      { key: "Files", value: `<button class="bg-blue-500 text-white px-2 py-1 rounded" onclick="openFileMenu(${app.id})">Files v</button>` },
+      { key: "Status", value: `<span class="status-pill ${statusClass}">${status}</span>` },
+      { key: "Action", value: `<div class="action-cell"><button class="bg-orange-500 text-white px-2 py-1 rounded" onclick="toggleActionMenu(${app.id})">Action v</button><div id="actionMenu-${app.id}" class="hidden action-menu bg-white border rounded shadow p-2"><button class="block w-full text-left px-2 py-1 hover:bg-gray-100" onclick="openActionModal(${app.id}, 'Processing')">Processing</button><button class="block w-full text-left px-2 py-1 hover:bg-gray-100" onclick="openActionModal(${app.id}, 'Approved')">Approved</button><button class="block w-full text-left px-2 py-1 hover:bg-gray-100" onclick="openActionModal(${app.id}, 'Rejected')">Rejected</button></div></div>` }
+    ];
+
+    details.forEach((detail, detailIdx) => {
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-id", app.id);
+      if (detailIdx === 0) tr.classList.add("app-row-start");
+      tr.innerHTML = `
+        ${detailIdx === 0 ? `<td class="app-num" rowspan="${details.length}">${index + 1}</td>` : ""}
+        <td class="kv-head">${detail.key}</td>
+        <td class="kv-values">${detail.value}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
   });
 
-  // Update KPI Boxes
   document.getElementById("totalApps").textContent = data.length;
   document.getElementById("approvedApps").textContent = approvedCount;
   document.getElementById("deniedApps").textContent = rejectedCount;
   document.getElementById("pendingApps").textContent = pendingCount;
 }
-
 // === Send Message Function ===
 window.sendMessage = async function(applicantId) {
   const messageInput = document.getElementById(`message-${applicantId}`);
@@ -1590,19 +1676,26 @@ window.sendMessage = async function(applicantId) {
     alert("Failed to send message. Check console.");
   } else {
     alert("Message sent to applicant!");
-    messageInput.value = ""; // ✅ Clear input after sending
+    messageInput.value = ""; // [OK] Clear input after sending
   }
 };
 
 // Run on page load
 fetchApplicants();
+let adminResponsiveRefreshTimer = null;
+window.addEventListener("resize", () => {
+  if (adminResponsiveRefreshTimer) window.clearTimeout(adminResponsiveRefreshTimer);
+  adminResponsiveRefreshTimer = window.setTimeout(() => {
+    fetchApplicants();
+  }, 140);
+});
 
 
 
 
 async function updateStatus(id, newStatus) {
 
-  // ✅ Ask first before updating
+  // [OK] Ask first before updating
   const confirmUpdate = confirm(`Are you sure you want to set this applicant's status to "${newStatus}"?`);
   if (!confirmUpdate) return;
 
@@ -1614,7 +1707,7 @@ async function updateStatus(id, newStatus) {
 
   if (updateError) {
     console.error(updateError);
-    alert("❌ Failed to update status!");
+    alert("[ERROR] Failed to update status!");
     return;
   }
 
@@ -1632,7 +1725,7 @@ async function updateStatus(id, newStatus) {
 
     if (applicantError) {
       console.error(applicantError);
-      alert("❌ Failed to fetch applicant data for history!");
+      alert("[ERROR] Failed to fetch applicant data for history!");
       return;
     }
 
@@ -1656,19 +1749,19 @@ const decidedBy = user?.user_metadata?.full_name || "Unknown Admin";
 
     if (historyError) {
       console.error(historyError);
-      alert("⚠️ Failed to save history record!");
+      alert("[WARN] Failed to save history record!");
       return;
     }
   }
 
-  // ✅ Optional: update KPI counters immediately
+  // [OK] Optional: update KPI counters immediately
   fetchApplicants(); // refresh visible applicants and counters
 
-  // ✅ Success message
-  alert(`✅ Status updated to "${newStatus}" successfully!`);
+  // [OK] Success message
+  alert(`[OK] Status updated to "${newStatus}" successfully!`);
 }
 
-// ✅ expose globally
+// [OK] expose globally
 window.updateStatus = updateStatus;
 
 // ===== Action Modal + SMS Queueing =====
@@ -1700,7 +1793,7 @@ function openActionModal(id, newStatus){
   pendingAction = { id, newStatus, app };
   document.getElementById('actionStatusLabel').textContent = newStatus;
   document.getElementById('actionPreviewName').textContent = app.Name || 'Applicant';
-  document.getElementById('actionPreviewContact').textContent = `${app.email || ''}${app.contact_number ? ' • ' + app.contact_number : ''}`;
+  document.getElementById('actionPreviewContact').textContent = `${app.email || ''}${app.contact_number ? ' - ' + app.contact_number : ''}`;
   const ta = document.getElementById('actionMessage');
   ta.value = defaultMessageFor(newStatus, app);
   const menu = document.getElementById(`actionMenu-${id}`);
@@ -1837,3 +1930,6 @@ window.confirmAction = confirmAction;
   <script src="shared/autocomplete-off.js" defer></script>
 </body>
 </html>
+
+
+
