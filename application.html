@@ -1714,8 +1714,13 @@ async function prefillFromCurrentUser() {
 
       const pointScaleDecimals = decimalNums.filter((n) => n >= 1 && n <= 5);
       if (pointScaleDecimals.length) {
-        // Prefer the smallest point-scale value in each row to avoid picking credit units.
-        subjectGrades.push(Math.min(...pointScaleDecimals));
+        const quarterStep = pointScaleDecimals.filter((n) => {
+          return Math.abs(n * 4 - Math.round(n * 4)) < 0.03;
+        });
+        const pool = quarterStep.length ? quarterStep : pointScaleDecimals;
+        const nonInteger = pool.filter((n) => Math.abs(n - Math.round(n)) > 0.001);
+        const chosen = nonInteger.length ? Math.min(...nonInteger) : Math.min(...pool);
+        subjectGrades.push(chosen);
         continue;
       }
 
