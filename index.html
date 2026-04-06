@@ -144,6 +144,10 @@
     html[data-theme="dark"] .search-pill{border-color:rgba(255,255,255,.12)}
     .search-pill .key{flex:0 0 26px; height:26px; display:grid; place-items:center; border-radius:999px; background:#fff; border:1px solid rgba(24,34,58,.08); box-shadow:var(--shadow-1); font-size:.9rem}
     html[data-theme="dark"] .search-pill .key{background:var(--panel); border-color:rgba(255,255,255,.14)}
+    .search-pill.search-result{cursor:pointer}
+    .search-pill.search-result:hover{transform:translateY(-1px)}
+    .search-live{display:grid; gap:8px; margin-top:10px}
+    .search-live-empty{padding:8px 2px; color:var(--muted); font-size:.94rem}
 
     .search-input{margin-top:6px; display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:12px; background:#fff; border:1px solid rgba(24,34,58,.08); box-shadow:var(--shadow-1)}
     .search-input input{width:100%; border:0; outline:0; font:inherit; color:var(--ink)}
@@ -291,6 +295,7 @@
             <input id="homeSearchBox" type="text" placeholder="Search scholarships"/>
             <button id="homeSearchBtn" class="btn btn-primary" style="padding:8px 14px">Search</button>
           </div>
+          <div class="search-live" id="homeSearchResults" aria-live="polite"></div>
         </div>
       </section>
 
@@ -526,63 +531,152 @@
     window.addEventListener('load', syncAuthLinks);
   </script>
 
-  <!-- ====== Search wiring (Home -> scholarship.html?q=) + Recent Searches ====== -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- ====== Search wiring (Home -> scholarship.html?q=) + Recent Searches ====== -->
   <script>
     const RECENT_KEY = 'recentSearches';
+    const HOME_SUPABASE_URL = "https://qdrnqkoozsloeqzxpgha.supabase.co";
+    const HOME_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkcm5xa29venNsb2VxenhwZ2hhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1ODQ5MjgsImV4cCI6MjA3NTE2MDkyOH0.E4Lp4LtyvRfFoImUkZMFyVBM7sro4aoNlQEa7sUIsIs";
+    const HOME_SCHOLARSHIP_FALLBACK = [
+      "Nanay Bing",
+      "Tulong Dunong",
+      "DA ACEF-GIAHEP (Agricultural Competitiveness Enhancement Fund - Grants-in-Aid for Higher Education Program)",
+      "Department of Science and Technology - Science Education Institute or DOST-SEI",
+      "Tertiary Education Subsidy (TES)",
+      "San Miguel Global Power Foundation's ENGINE (SMCGP ENGINE)",
+      "San Miguel Global Power (SMGP) Foundation's MPCL (Masinloc Power Corporation Limited)"
+    ];
+    let homeScholarshipNames = HOME_SCHOLARSHIP_FALLBACK.slice();
 
-    function getRecents(){
+    function norm(s) {
+      return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    function uniqueScholarshipNames(list) {
+      const seen = new Set();
+      const out = [];
+      (list || []).forEach((name) => {
+        const label = String(name || '').trim();
+        if (!label) return;
+        const key = norm(label);
+        if (seen.has(key)) return;
+        seen.add(key);
+        out.push(label);
+      });
+      return out;
+    }
+
+    async function loadHomeScholarshipNames() {
+      const initial = uniqueScholarshipNames(HOME_SCHOLARSHIP_FALLBACK);
+      if (!window.supabase || !window.supabase.createClient) {
+        homeScholarshipNames = initial;
+        return;
+      }
+      try {
+        const client = window.supabase.createClient(HOME_SUPABASE_URL, HOME_SUPABASE_KEY);
+        const { data, error } = await client
+          .from('scholarships')
+          .select('name')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        const fetched = (data || []).map((row) => row?.name);
+        homeScholarshipNames = uniqueScholarshipNames([].concat(fetched, initial));
+      } catch (_) {
+        homeScholarshipNames = initial;
+      }
+    }
+
+    function getRecents() {
       try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; }
       catch { return []; }
     }
-    function saveRecent(q){
-      if(!q) return;
+
+    function saveRecent(q) {
+      if (!q) return;
       const arr = getRecents();
-      const next = [q, ...arr.filter(v => v.toLowerCase() !== q.toLowerCase())].slice(0,6);
+      const next = [q, ...arr.filter(v => v.toLowerCase() !== q.toLowerCase())].slice(0, 6);
       localStorage.setItem(RECENT_KEY, JSON.stringify(next));
     }
-    function renderRecents(){
+
+    function renderRecents() {
       const box = document.getElementById('recentList');
-      if(!box) return;
+      if (!box) return;
       const arr = getRecents();
       box.innerHTML = arr.length ? '' : '<div style="color:var(--muted)">No recent searches yet.</div>';
-      arr.forEach(q => {
+      arr.forEach((q) => {
         const pill = document.createElement('div');
         pill.className = 'search-pill';
-        pill.innerHTML = `<span class="key">🔎</span> ${q}`;
+        pill.innerHTML = `<span class="key">S</span> ${q}`;
         pill.tabIndex = 0;
-        pill.addEventListener('click', () => goToResults(q));
-        pill.addEventListener('keypress', (e)=>{ if(e.key==='Enter') goToResults(q); });
+        pill.addEventListener('click', () => openScholarshipResult(q));
+        pill.addEventListener('keypress', (e) => { if (e.key === 'Enter') openScholarshipResult(q); });
         box.appendChild(pill);
       });
     }
 
-    function goToResults(query){
-    var input = document.getElementById('homeSearchBox');
-    // Avoid ?? and ?. for older browsers
-    var qSource = (query !== null && query !== undefined) ? String(query) : (input ? input.value : '');
-    var q = (qSource || '').trim();
-
-    if (!q) {
-      if (input) input.focus();
-      return;
+    function openScholarshipResult(name) {
+      const picked = String(name || '').trim();
+      if (!picked) return;
+      if (typeof window.saveRecent === 'function') {
+        window.saveRecent(picked);
+      }
+      window.location.href = 'scholarship.html?q=' + encodeURIComponent(picked);
     }
 
-    // Only call saveRecent if it exists
-    if (typeof window.saveRecent === 'function') {
-      window.saveRecent(q);
+    function renderHomeLiveResults(query) {
+      const box = document.getElementById('homeSearchResults');
+      if (!box) return;
+      const raw = String(query || '').trim();
+      if (!raw) {
+        box.innerHTML = '';
+        return;
+      }
+
+      const q = norm(raw);
+      const matches = homeScholarshipNames
+        .filter((name) => norm(name).indexOf(q) !== -1)
+        .slice(0, 8);
+
+      if (!matches.length) {
+        box.innerHTML = '<div class="search-live-empty">No matching scholarship found.</div>';
+        return;
+      }
+
+      box.innerHTML = '';
+      matches.forEach((name) => {
+        const result = document.createElement('button');
+        result.type = 'button';
+        result.className = 'search-pill search-result';
+        result.innerHTML = `<span class="key">S</span><span>${name}</span>`;
+        result.addEventListener('click', () => openScholarshipResult(name));
+        box.appendChild(result);
+      });
     }
 
-    window.location.href = 'scholarship.html?q=' + encodeURIComponent(q);
-  }
-
-    (function initHomeSearch(){
+    (async function initHomeSearch() {
       const input = document.getElementById('homeSearchBox');
       const btn = document.getElementById('homeSearchBtn');
       const clearBtn = document.getElementById('clearRecent');
+      await loadHomeScholarshipNames();
 
-      btn?.addEventListener('click', () => goToResults());
-      input?.addEventListener('keypress', (e) => { if(e.key === 'Enter') goToResults(); });
+      btn?.addEventListener('click', () => renderHomeLiveResults(input ? input.value : ''));
+      input?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          renderHomeLiveResults(input.value);
+        }
+      });
+      input?.addEventListener('input', () => renderHomeLiveResults(input.value));
       clearBtn?.addEventListener('click', () => { localStorage.removeItem(RECENT_KEY); renderRecents(); });
+
+      document.addEventListener('click', (e) => {
+        const inputWrap = document.querySelector('.search-input');
+        const liveBox = document.getElementById('homeSearchResults');
+        if (!inputWrap || !liveBox) return;
+        if (inputWrap.contains(e.target) || liveBox.contains(e.target)) return;
+        liveBox.innerHTML = '';
+      });
 
       renderRecents();
     })();
@@ -591,3 +685,4 @@
   <script src="shared/autocomplete-off.js" defer></script>
 </body>
 </html>
+
