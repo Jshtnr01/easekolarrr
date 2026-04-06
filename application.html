@@ -794,7 +794,11 @@ window.addEventListener("DOMContentLoaded", async () => {
           preview.classList.remove("active");
           img.removeAttribute("src");
         }
-        await validateCogInputLive(input, cogStatus);
+        try {
+          await validateCogInputLive(input, cogStatus);
+        } catch (err) {
+          setCogInlineStatus(cogStatus, "fail", `Grade checker error: ${String(err?.message || err)}`);
+        }
       });
 
       fileLabel.appendChild(input);
@@ -1729,6 +1733,8 @@ async function prefillFromCurrentUser() {
     statusEl.className = `status ${tone || "neutral"}`;
     statusEl.textContent = message;
     statusEl.style.display = "block";
+    statusEl.style.marginTop = "8px";
+    statusEl.style.whiteSpace = "normal";
   }
 
   async function validateCogInputLive(inputEl, statusEl) {
@@ -1982,7 +1988,11 @@ async function prefillFromCurrentUser() {
           preview.classList.remove("active");
           img.removeAttribute("src");
         }
-        await validateCogInputLive(input, cogStatus);
+        try {
+          await validateCogInputLive(input, cogStatus);
+        } catch (err) {
+          setCogInlineStatus(cogStatus, "fail", `Grade checker error: ${String(err?.message || err)}`);
+        }
       });
 
       fileLabel.appendChild(input);
