@@ -576,6 +576,37 @@
 
 /* Final mobile overrides to prevent profile overlap/cropping */
 @media (max-width: 860px){
+  #page-dash .hero-banner{
+    grid-template-columns: 1fr !important;
+  }
+  #page-dash .hero-art{
+    order: -1;
+    width: 100%;
+    min-height: 220px;
+    padding: 10px 0 0;
+    justify-items: center;
+  }
+  #page-dash .hero-student-photo{
+    width: 190px !important;
+    height: 190px !important;
+    transform: none !important;
+    margin: 0 auto;
+  }
+  #page-dash .hero-mascot-fallback{
+    width: 190px !important;
+    height: 190px !important;
+    transform: none !important;
+    margin: 0 auto;
+  }
+  #page-dash .hero-mascot-fallback svg{
+    width: 190px !important;
+    height: 190px !important;
+  }
+  #page-dash .hero-hello{
+    text-align: center;
+    align-items: center;
+  }
+
   #page-profile.page.active{
     display: flex;
     flex-direction: column;
@@ -596,6 +627,15 @@
   }
 }
 @media (max-width: 640px){
+  #page-dash .hero-art{
+    min-height: 200px;
+  }
+  #page-dash .hero-student-photo,
+  #page-dash .hero-mascot-fallback,
+  #page-dash .hero-mascot-fallback svg{
+    width: 175px !important;
+    height: 175px !important;
+  }
   #page-profile .profile-photo-wrapper{
     margin: 0 auto 12px !important;
   }
