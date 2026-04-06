@@ -308,6 +308,7 @@
             </div>
             <div id="reqUploads" class="requirements-grid"></div>
             <p id="reqHint" class="muted" style="margin-top:8px;">Select a scholarship program to load required uploads.</p>
+            <div id="cogLiveWarning" class="status" style="margin-top:8px; display:none;"></div>
           </div>
 
           <button class="submit" type="submit" id="submitBtn">Submit Application</button>
@@ -815,6 +816,20 @@ window.addEventListener("DOMContentLoaded", async () => {
     console.error("Missing DOM elements for requirements section.");
     return;
   }
+
+  reqUploads.addEventListener("change", async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    if (target.type !== "file") return;
+    if (target?.dataset?.requirementType !== "certificate_of_grades") return;
+    const cell = target.closest("div");
+    const statusEl = cell?.querySelector?.(".status") || null;
+    try {
+      await validateCogInputLive(target, statusEl);
+    } catch (err) {
+      setCogValidationFeedback(statusEl, "fail", `Grade checker error: ${String(err?.message || err)}`);
+    }
+  });
 
   // Hard fallback: render requirements from URL/session immediately,
   // independent of Supabase initialization or dropdown events.
@@ -1737,19 +1752,35 @@ async function prefillFromCurrentUser() {
     statusEl.style.whiteSpace = "normal";
   }
 
+  function setCogValidationFeedback(statusEl, tone, message) {
+    setCogInlineStatus(statusEl, tone, message);
+    const globalEl = document.getElementById("cogLiveWarning");
+    if (!globalEl) return;
+    if (!message) {
+      globalEl.className = "status";
+      globalEl.textContent = "";
+      globalEl.style.display = "none";
+      return;
+    }
+    globalEl.className = `status ${tone || "neutral"}`;
+    globalEl.textContent = message;
+    globalEl.style.display = "block";
+    globalEl.style.marginTop = "8px";
+    globalEl.style.whiteSpace = "normal";
+  }
+
   async function validateCogInputLive(inputEl, statusEl) {
     if (!inputEl || inputEl?.dataset?.requirementType !== "certificate_of_grades") {
-      setCogInlineStatus(statusEl, "", "");
       return;
     }
 
     const file = inputEl.files?.[0];
     if (!file) {
-      setCogInlineStatus(statusEl, "", "");
+      setCogValidationFeedback(statusEl, "", "");
       return;
     }
 
-    setCogInlineStatus(statusEl, "neutral", "Checking Certificate of Grades...");
+    setCogValidationFeedback(statusEl, "neutral", "Checking Certificate of Grades...");
     const selected = dropdown?.options?.[dropdown.selectedIndex];
     let requiredGrade = parseRequiredGradeThreshold(selected?.dataset?.grade);
     if (requiredGrade == null) {
@@ -1761,26 +1792,26 @@ async function prefillFromCurrentUser() {
     try {
       cogText = await extractTextFromCogFile(file);
     } catch (err) {
-      setCogInlineStatus(statusEl, "fail", String(err?.message || err));
+      setCogValidationFeedback(statusEl, "fail", String(err?.message || err));
       return;
     }
 
     const metrics = parseCogMetricsFromText(cogText);
     if (metrics.gwa == null && (!metrics.subjectGrades.length || metrics.minSubjectGrade == null)) {
-      setCogInlineStatus(statusEl, "fail", "No readable GWA or subject grades were detected in this file.");
+      setCogValidationFeedback(statusEl, "fail", "No readable GWA or subject grades were detected in this file.");
       return;
     }
     if (metrics.gwa == null) {
-      setCogInlineStatus(statusEl, "fail", "GWA was not detected in the uploaded Certificate of Grades.");
+      setCogValidationFeedback(statusEl, "fail", "GWA was not detected in the uploaded Certificate of Grades.");
       return;
     }
     if (!metrics.subjectGrades.length || metrics.minSubjectGrade == null) {
-      setCogInlineStatus(statusEl, "fail", "Subject grades were not detected in the uploaded Certificate of Grades.");
+      setCogValidationFeedback(statusEl, "fail", "Subject grades were not detected in the uploaded Certificate of Grades.");
       return;
     }
 
     if (requiredGrade == null) {
-      setCogInlineStatus(
+      setCogValidationFeedback(
         statusEl,
         "neutral",
         `Readable grades detected. GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}. No grade threshold is configured for this scholarship.`
@@ -1791,7 +1822,7 @@ async function prefillFromCurrentUser() {
     const gwaPass = metrics.gwa >= requiredGrade;
     const subjectPass = metrics.minSubjectGrade >= requiredGrade;
     if (!gwaPass || !subjectPass) {
-      setCogInlineStatus(
+      setCogValidationFeedback(
         statusEl,
         "fail",
         `Below requirement (${requiredGrade}). Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
@@ -1799,7 +1830,7 @@ async function prefillFromCurrentUser() {
       return;
     }
 
-    setCogInlineStatus(
+    setCogValidationFeedback(
       statusEl,
       "ok",
       `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
