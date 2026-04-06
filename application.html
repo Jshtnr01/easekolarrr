@@ -1723,10 +1723,12 @@ async function prefillFromCurrentUser() {
     if (!message) {
       statusEl.className = "status";
       statusEl.textContent = "";
+      statusEl.style.display = "none";
       return;
     }
     statusEl.className = `status ${tone || "neutral"}`;
     statusEl.textContent = message;
+    statusEl.style.display = "block";
   }
 
   async function validateCogInputLive(inputEl, statusEl) {
@@ -1748,10 +1750,6 @@ async function prefillFromCurrentUser() {
       const row = resolveScholarshipRowFromCurrentState();
       requiredGrade = parseRequiredGradeThreshold(row?.grade);
     }
-    if (requiredGrade == null) {
-      setCogInlineStatus(statusEl, "neutral", "Grade checker skipped: this scholarship has no required grade configured.");
-      return;
-    }
 
     let cogText = "";
     try {
@@ -1772,6 +1770,15 @@ async function prefillFromCurrentUser() {
     }
     if (!metrics.subjectGrades.length || metrics.minSubjectGrade == null) {
       setCogInlineStatus(statusEl, "fail", "Subject grades were not detected in the uploaded Certificate of Grades.");
+      return;
+    }
+
+    if (requiredGrade == null) {
+      setCogInlineStatus(
+        statusEl,
+        "neutral",
+        `Readable grades detected. GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}. No grade threshold is configured for this scholarship.`
+      );
       return;
     }
 
