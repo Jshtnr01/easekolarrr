@@ -539,7 +539,7 @@ html.embedded .floating-apply{
       localStorage.setItem('loggedIn','false');
       localStorage.removeItem('role');
       showNotice('You have logged out.');
-      window.location.href = 'Index.html';
+      window.location.href = 'index.html';
     });
   </script>
 
@@ -550,7 +550,7 @@ html.embedded .floating-apply{
     var input = document.getElementById('schSearchBox');
     var btn   = document.getElementById('schSearchBtn');
     var meta  = document.getElementById('resultMeta');
-    var cards = Array.prototype.slice.call(document.querySelectorAll('.grid .card'));
+    var cards = [];
 
     function normalize(s){ return (s || '').toLowerCase(); }
     function escReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -572,9 +572,12 @@ html.embedded .floating-apply{
       return normalize(title + ' ' + para + ' ' + data);
     }
 
-    // Cache searchable strings
     var hayCache = new Map();
-    cards.forEach(function(c){ hayCache.set(c, searchableText(c)); });
+    function refreshCards(){
+      cards = Array.prototype.slice.call(document.querySelectorAll('.grid .card'));
+      hayCache = new Map();
+      cards.forEach(function(c){ hayCache.set(c, searchableText(c)); });
+    }
 
     function clearHighlights(card){
       var titleEl = card.querySelector('h3');
@@ -598,6 +601,7 @@ html.embedded .floating-apply{
     }
 
     function filterCards(q){
+      refreshCards();
       var query = normalize(q).trim();
       var terms = query ? query.split(/\s+/) : [];
       var shown = 0;
@@ -654,8 +658,14 @@ html.embedded .floating-apply{
     if (btn)   btn.addEventListener('click', function(){ filterCards(input ? input.value : ''); setParamQ(input ? input.value.trim() : ''); });
     if (input){
       input.addEventListener('keypress', function(e){ if (e.key === 'Enter'){ filterCards(input.value); setParamQ(input.value.trim()); } });
-      input.addEventListener('input',   function(){ setParamQ(input.value.trim()); });
+      input.addEventListener('input',   function(){ filterCards(input.value); setParamQ(input.value.trim()); });
     }
+
+    window.__scholarshipSearchApi = {
+      refresh: function(){
+        filterCards(input ? input.value : '');
+      }
+    };
 
     // optional: scroll list into view when landing with ?q=
     if (initialQ){
@@ -1517,9 +1527,10 @@ async function loadAdminScholarships(){
     grid.appendChild(card);
   });
 
-  // update search cache after new cards are added
-  const event = new Event("input");
-  document.getElementById("schSearchBox")?.dispatchEvent(event);
+  // re-apply active query after cards are rendered
+  if (window.__scholarshipSearchApi && typeof window.__scholarshipSearchApi.refresh === "function") {
+    window.__scholarshipSearchApi.refresh();
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
