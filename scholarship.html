@@ -915,11 +915,32 @@ function forceRenderRequirementsInApp(frame, requirements, requiredGradeRaw = ""
           for (let p = 1; p <= pdf.numPages; p += 1) {
             const page = await pdf.getPage(p);
             const content = await page.getTextContent();
-            const txt = (content.items || [])
-              .map((it) => String(it.str || "").trim())
-              .filter(Boolean)
-              .join(" ");
-            chunks.push(txt);
+            const items = (content.items || [])
+              .map((it) => ({
+                text: String(it.str || "").trim(),
+                x: Number(it.transform?.[4] || 0),
+                y: Number(it.transform?.[5] || 0),
+              }))
+              .filter((it) => it.text);
+
+            const rows = [];
+            const yTolerance = 2.5;
+            for (const item of items) {
+              let row = rows.find((r) => Math.abs(r.y - item.y) <= yTolerance);
+              if (!row) {
+                row = { y: item.y, cells: [] };
+                rows.push(row);
+              }
+              row.cells.push(item);
+            }
+
+            rows.sort((a, b) => b.y - a.y);
+            const pageLines = rows.map((row) => {
+              row.cells.sort((a, b) => a.x - b.x);
+              return row.cells.map((c) => c.text).join(" ").replace(/\s+/g, " ").trim();
+            }).filter(Boolean);
+
+            chunks.push(pageLines.join("\n"));
           }
           return chunks.join("\n");
         };
