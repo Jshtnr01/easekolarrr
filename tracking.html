@@ -221,7 +221,7 @@
 
     <div class="table-wrap">
       <table>
-        <thead>
+        <thead id="historyHead">
           <tr>
             <th>#</th>
             <th></th>
@@ -275,6 +275,35 @@
 
 let applicantData = [];
 let activeFilter = "All";
+const MOBILE_BREAKPOINT = 640;
+
+function isMobileView() {
+  return window.innerWidth <= MOBILE_BREAKPOINT;
+}
+
+function renderTableHead() {
+  const thead = document.getElementById("historyHead");
+  if (!thead) return;
+  if (isMobileView()) {
+    thead.innerHTML = `
+      <tr>
+        <th>#</th>
+        <th></th>
+        <th></th>
+      </tr>
+    `;
+    return;
+  }
+  thead.innerHTML = `
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Program</th>
+      <th>Campus</th>
+      <th>Status</th>
+    </tr>
+  `;
+}
 
 function applyTheme(theme) {
   const resolved = theme === 'dark' ? 'dark' : 'light';
@@ -316,6 +345,7 @@ async function fetchApplications() {
 function renderApplications() {
   const tbody = document.getElementById("historyTable");
   tbody.innerHTML = "";
+  renderTableHead();
 
   let filtered = applicantData;
 
@@ -325,15 +355,29 @@ function renderApplications() {
     );
   }
 
+  const mobile = isMobileView();
+
   filtered.forEach((row, index) => {
     const statusClass = row.status?.toLowerCase() || '';
+    if (!mobile) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${row.Name || 'N/A'}</td>
+        <td>${row.scholarship_program || 'N/A'}</td>
+        <td>${row.campus || 'N/A'}</td>
+        <td><span class="status ${statusClass}">${row.status || 'N/A'}</span></td>
+      `;
+      tbody.appendChild(tr);
+      return;
+    }
+
     const pairs = [
       { key: 'Name', value: row.Name || 'N/A' },
       { key: 'Program', value: row.scholarship_program || 'N/A' },
       { key: 'Campus', value: row.campus || 'N/A' },
       { key: 'Status', value: `<span class="status ${statusClass}">${row.status || 'N/A'}</span>` },
     ];
-
     pairs.forEach((pair, pairIdx) => {
       const tr = document.createElement("tr");
       if (pairIdx === 0) tr.classList.add("app-row-start");
@@ -359,6 +403,10 @@ window.onload = () => {
   applyTheme(localStorage.getItem('theme'));
   fetchApplications();
 };
+
+window.addEventListener('resize', () => {
+  renderApplications();
+});
 </script>
 
   <script src="shared/autocomplete-off.js" defer></script>
