@@ -144,6 +144,39 @@
     .rejected-btn { background: #dc2626; color: white; }
     .pending-btn { background: #d97706; color: white; }
     .filter-btn:hover { opacity: 0.8; }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table-wrap table {
+      min-width: 660px;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px;
+      }
+      .card {
+        padding: 16px;
+        border-radius: 16px;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      p {
+        margin-bottom: 12px;
+      }
+      .filter-btn {
+        margin-bottom: 6px;
+      }
+      th, td {
+        font-size: 12px;
+        padding: 10px 8px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -158,18 +191,20 @@
       <button onclick="setFilter('Pending')" class="filter-btn pending-btn">Pending</button>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Name</th>
-          <th>Program</th>
-          <th>Campus</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="historyTable"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Program</th>
+            <th>Campus</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="historyTable"></tbody>
+      </table>
+    </div>
   </div>
 
 <script>
