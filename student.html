@@ -601,7 +601,7 @@
               <div class="card-body">
                 <header style="display:flex;align-items:center;justify-content:space-between;">
                   <h3 style="font-size:18px">Notifications</h3>
-                  <a href="#" style="font-weight:700;color:var(--primary);text-decoration:none">See all</a>
+                  <button id="notificationsToggleBtn" type="button" style="font-weight:700;color:var(--primary);text-decoration:none;background:transparent;border:none;cursor:pointer;padding:0;">Show all</button>
                 </header>
                 <div class="notis" id="notiList" style="margin-top: 16px; display:grid; gap: 16px;">
                   <div class="note" style="display:grid; grid-template-columns: 36px 1fr auto; align-items:center; gap:12px; padding: 12px; border-radius: 14px; border:1px solid var(--line); background: color-mix(in oklab, var(--card) 96%, white 4%);">
@@ -763,6 +763,9 @@
     let notificationPollHandle = null;
     let notificationChannel = null;
     let notificationRefreshTimer = null;
+    const COLLAPSED_NOTIFICATION_COUNT = 5;
+    let notificationsExpanded = false;
+    let latestNotifications = [];
     let audioCtx = null;
     function getOrCreateAudioContext() {
       if (!audioCtx) {
@@ -979,6 +982,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   refreshDashboardHeroPhoto(studentEmail);
   fetchNotifications(studentEmail);
   subscribeToNotificationsRealtime(studentEmail);
+  const notificationsToggleBtn = document.getElementById('notificationsToggleBtn');
+  if (notificationsToggleBtn) {
+    notificationsToggleBtn.addEventListener('click', () => {
+      notificationsExpanded = !notificationsExpanded;
+      renderNotificationsList(latestNotifications);
+    });
+  }
   const unlockAudio = () => {
     getOrCreateAudioContext();
   };
@@ -1001,6 +1011,73 @@ window.addEventListener('beforeunload', () => {
     notificationChannel = null;
   }
 });
+
+function updateNotificationsToggle(totalCount) {
+  const btn = document.getElementById('notificationsToggleBtn');
+  if (!btn) return;
+  if (totalCount <= COLLAPSED_NOTIFICATION_COUNT) {
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'inline-flex';
+  btn.textContent = notificationsExpanded ? 'Show latest 5' : 'Show all';
+  btn.setAttribute('aria-expanded', notificationsExpanded ? 'true' : 'false');
+}
+
+function formatNotificationTimestamp(isoValue) {
+  if (!isoValue) return "Date unavailable";
+  const dt = new Date(isoValue);
+  if (Number.isNaN(dt.getTime())) return "Date unavailable";
+  return dt.toLocaleString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function renderNotificationsList(data = []) {
+  const notiList = document.getElementById("notiList");
+  if (!notiList) return;
+
+  if (!data || data.length === 0) {
+    notiList.innerHTML = "<p>No notifications yet.</p>";
+    updateNotificationsToggle(0);
+    return;
+  }
+
+  const visibleItems = notificationsExpanded
+    ? data
+    : data.slice(0, COLLAPSED_NOTIFICATION_COUNT);
+
+  notiList.innerHTML = "";
+  visibleItems.forEach((item) => {
+    const messageText = escapeHtml(item.message || "");
+    const scholarshipText = escapeHtml(item.scholarship_program || "General");
+    const receivedAtText = escapeHtml(formatNotificationTimestamp(item.created_at));
+    const div = document.createElement("div");
+    div.className = "note";
+    div.style =
+      "display:grid; grid-template-columns: 36px 1fr auto; align-items:center; gap:12px; padding: 12px; border-radius: 14px; border:1px solid var(--line); background: color-mix(in oklab, var(--card) 96%, white 4%);";
+
+    div.innerHTML = `
+      <div class="dot yellow" style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#FFF7E6;color:#9A6A00;">
+        <i class="fa-regular fa-bell"></i>
+      </div>
+      <div>
+        <strong>${messageText}</strong>
+        <small style="display:block;color:var(--muted)">Related to: ${scholarshipText}</small>
+        <small style="display:block;color:var(--muted)">Received: ${receivedAtText}</small>
+      </div>
+      <i class="fa-solid fa-ellipsis-vertical" style="color:#9AA5B5"></i>
+    `;
+    notiList.appendChild(div);
+  });
+
+  updateNotificationsToggle(data.length);
+}
 
 async function fetchNotifications(studentEmail, options = {}) {
   const { fromPolling = false, fromRealtime = false } = options;
@@ -1025,7 +1102,8 @@ async function fetchNotifications(studentEmail, options = {}) {
   }
 
   if (!data || data.length === 0) {
-    notiList.innerHTML = "<p>No notifications yet.</p>";
+    latestNotifications = [];
+    renderNotificationsList([]);
     seenNotificationKeys = new Set();
     isFirstNotificationsLoad = false;
     return;
@@ -1046,44 +1124,8 @@ async function fetchNotifications(studentEmail, options = {}) {
   }
   seenNotificationKeys = latestKeys;
   isFirstNotificationsLoad = false;
-
-  const formatNotificationTimestamp = (isoValue) => {
-    if (!isoValue) return "Date unavailable";
-    const dt = new Date(isoValue);
-    if (Number.isNaN(dt.getTime())) return "Date unavailable";
-    return dt.toLocaleString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
-  notiList.innerHTML = "";
-  data.forEach((item) => {
-    const messageText = escapeHtml(item.message || "");
-    const scholarshipText = escapeHtml(item.scholarship_program || "General");
-    const receivedAtText = escapeHtml(formatNotificationTimestamp(item.created_at));
-    const div = document.createElement("div");
-    div.className = "note";
-    div.style =
-      "display:grid; grid-template-columns: 36px 1fr auto; align-items:center; gap:12px; padding: 12px; border-radius: 14px; border:1px solid var(--line); background: color-mix(in oklab, var(--card) 96%, white 4%);";
-
-    div.innerHTML = `
-      <div class="dot yellow" style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#FFF7E6;color:#9A6A00;">
-        <i class="fa-regular fa-bell"></i>
-      </div>
-      <div>
-        <strong>${messageText}</strong>
-        <small style="display:block;color:var(--muted)">Related to: ${scholarshipText}</small>
-        <small style="display:block;color:var(--muted)">Received: ${receivedAtText}</small>
-      </div>
-      <i class="fa-solid fa-ellipsis-vertical" style="color:#9AA5B5"></i>
-    `;
-    notiList.appendChild(div);
-  });
+  latestNotifications = data;
+  renderNotificationsList(latestNotifications);
 }
 
 function escapeHtml(value) {
