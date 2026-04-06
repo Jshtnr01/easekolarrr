@@ -81,6 +81,60 @@
 [data-theme='dark'] #sidebar-root .admin-profile-name{ color:#E7EEFF; }
 [data-theme='dark'] #sidebar-root .admin-profile-role{ color:#9FB3D6; }
 [data-theme='dark'] #sidebar-root .admin-logout-btn{ background:#1A2850; color:#C7D7FF; }
+@media (max-width:860px){
+  #sidebar-root{ width:80px; }
+  #sidebar-root .admin-sidebar{ padding:16px 10px; }
+  #sidebar-root .admin-mode-toggle{ padding:8px; justify-content:center; }
+  #sidebar-root .admin-mode-toggle strong,
+  #sidebar-root .admin-mode-toggle small{ display:none; }
+  #sidebar-root .admin-menu h5{ display:none; }
+  #sidebar-root .admin-menu a{ justify-content:center; padding:10px 8px; }
+  #sidebar-root .admin-menu a span{ display:none; }
+  #sidebar-root .admin-profile-meta{ display:none !important; }
+  #sidebar-root .admin-logout-btn span{ display:none !important; }
+}
+@media (max-width:640px){
+  #sidebar-root{
+    width:100%;
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:80;
+    border-right:0;
+    border-top:1px solid var(--line, var(--sidebar-border, #d5deec));
+    background:color-mix(in oklab, var(--bg, #eef3fb) 96%, white 4%);
+    backdrop-filter: blur(8px);
+  }
+  #sidebar-root .admin-sidebar{
+    height:auto;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    display:block;
+  }
+  #sidebar-root .admin-mode-toggle,
+  #sidebar-root .admin-sidebar-bottom{
+    display:none;
+  }
+  #sidebar-root .admin-menu{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+  #sidebar-root .admin-menu a{
+    justify-content:center;
+    align-items:center;
+    padding:10px 8px;
+    min-height:42px;
+    border-radius:10px;
+    text-align:center;
+  }
+  #sidebar-root .admin-menu a span{ display:none; }
+  #sidebar-root .admin-menu a::after{
+    content: attr(data-mobile-label);
+    font-size:11px;
+    font-weight:800;
+    line-height:1.1;
+    color:inherit;
+  }
+  .admin-shell{ width:100% !important; height:auto !important; border-radius:0 !important; display:block !important; }
+  .content{ padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important; }
+}
 `;
 
     document.head.appendChild(style);
