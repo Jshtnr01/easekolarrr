@@ -797,10 +797,20 @@ window.addEventListener("DOMContentLoaded", async () => {
           preview.classList.remove("active");
           img.removeAttribute("src");
         }
-        try {
-          await validateCogInputLive(input, cogStatus);
-        } catch (err) {
-          setCogInlineStatus(cogStatus, "fail", `Grade checker error: ${String(err?.message || err)}`);
+        const isCog = isCertificateOfGradesRequirement(req) || isCertificateOfGradesRequirement(input.name);
+        if (isCog) {
+          input.dataset.requirementType = "certificate_of_grades";
+          input.dataset.requirementLabel = req;
+          if (file) {
+            setCogValidationFeedback(cogStatus, "neutral", `COG selected: ${file.name}. Checking...`);
+          } else {
+            setCogValidationFeedback(cogStatus, "", "");
+          }
+          try {
+            await validateCogInputLive(input, cogStatus);
+          } catch (err) {
+            setCogValidationFeedback(cogStatus, "fail", `Grade checker error: ${String(err?.message || err)}`);
+          }
         }
       });
 
@@ -1777,7 +1787,13 @@ async function prefillFromCurrentUser() {
   }
 
   async function validateCogInputLive(inputEl, statusEl) {
-    if (!inputEl || inputEl?.dataset?.requirementType !== "certificate_of_grades") {
+    const isCogInput =
+      !!inputEl &&
+      (
+        inputEl?.dataset?.requirementType === "certificate_of_grades" ||
+        isCertificateOfGradesRequirement(inputEl?.dataset?.requirementLabel || inputEl?.name || "")
+      );
+    if (!isCogInput) {
       return;
     }
 
@@ -2029,10 +2045,20 @@ async function prefillFromCurrentUser() {
           preview.classList.remove("active");
           img.removeAttribute("src");
         }
-        try {
-          await validateCogInputLive(input, cogStatus);
-        } catch (err) {
-          setCogInlineStatus(cogStatus, "fail", `Grade checker error: ${String(err?.message || err)}`);
+        const isCog = isCertificateOfGradesRequirement(req) || isCertificateOfGradesRequirement(input.name);
+        if (isCog) {
+          input.dataset.requirementType = "certificate_of_grades";
+          input.dataset.requirementLabel = req;
+          if (file) {
+            setCogValidationFeedback(cogStatus, "neutral", `COG selected: ${file.name}. Checking...`);
+          } else {
+            setCogValidationFeedback(cogStatus, "", "");
+          }
+          try {
+            await validateCogInputLive(input, cogStatus);
+          } catch (err) {
+            setCogValidationFeedback(cogStatus, "fail", `Grade checker error: ${String(err?.message || err)}`);
+          }
         }
       });
 
