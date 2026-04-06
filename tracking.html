@@ -163,6 +163,29 @@
     .kv-values .line:last-child {
       margin-bottom: 0;
     }
+    .kv-head,
+    .kv-values{
+      padding: 0;
+    }
+    .kv-head .line,
+    .kv-values .line{
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--row-line);
+      margin: 0;
+    }
+    .kv-head .line:last-child,
+    .kv-values .line:last-child{
+      border-bottom: 0;
+    }
+    .kv-head .line{
+      font-weight: 700;
+      color: var(--th-text);
+      background: color-mix(in oklab, var(--th-bg) 70%, white 30%);
+    }
+    .kv-values .line{
+      color: var(--table-text);
+      word-break: break-word;
+    }
 
     .table-wrap {
       width: 100%;
@@ -215,8 +238,8 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Row Header</th>
-            <th>Values</th>
+            <th></th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="historyTable"></tbody>
@@ -321,10 +344,12 @@ function renderApplications() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${index + 1}</td>
-      <td class="kv-head">Name
-Program
-Campus
-Status</td>
+      <td class="kv-head">
+        <p class="line">Name</p>
+        <p class="line">Program</p>
+        <p class="line">Campus</p>
+        <p class="line">Status</p>
+      </td>
       <td class="kv-values">
         <p class="line">${row.Name || 'N/A'}</p>
         <p class="line">${row.scholarship_program || 'N/A'}</p>
