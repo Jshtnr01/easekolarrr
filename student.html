@@ -399,17 +399,23 @@
         grid-template-rows: auto 1fr;
       }
       .sidebar{
-        position: sticky;
-        top: 0;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
         height: auto;
-        z-index: 30;
-        grid-template-rows: auto auto;
-        gap: 8px;
-        padding: 10px 12px;
+        z-index: 50;
+        grid-template-rows: auto;
+        gap: 0;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+        border-right: 0;
+        border-top: 1px solid var(--line);
+        background: color-mix(in oklab, var(--bg) 96%, white 4%);
+        backdrop-filter: blur(8px);
       }
       .brand{
-        width: fit-content;
-        padding: 8px;
+        display: none;
       }
       .nav{
         margin-top: 0;
@@ -425,6 +431,7 @@
       .nav a{
         padding: 10px 8px;
         justify-content: center;
+        border-radius: 10px;
       }
       .top{
         position: static;
@@ -443,6 +450,9 @@
       }
       .card-body{
         padding: 16px;
+      }
+      .main{
+        padding-bottom: calc(78px + env(safe-area-inset-bottom));
       }
     }
 
@@ -574,7 +584,8 @@
     position: static !important;
     top: auto !important;
     right: auto !important;
-    margin: 10px auto 0 !important;
+    order: -1;
+    margin: 0 auto 12px !important;
     display: flex;
     justify-content: center;
     z-index: 1;
@@ -586,7 +597,7 @@
 }
 @media (max-width: 640px){
   #page-profile .profile-photo-wrapper{
-    margin: 0 auto 10px !important;
+    margin: 0 auto 12px !important;
   }
 }
 
