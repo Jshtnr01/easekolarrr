@@ -847,8 +847,21 @@ function forceRenderRequirementsInApp(frame, requirements, requiredGradeRaw = ""
         const parseCogMetrics = (text) => {
           const src = String(text || "");
           const compact = src.replace(/\s+/g, " ");
-          const gwaMatch = compact.match(/\b(?:GWA|General Weighted Average)\b[^0-9]{0,20}([0-9]{1,3}(?:\.[0-9]+)?)/i);
-          const gwa = gwaMatch ? Number.parseFloat(gwaMatch[1]) : null;
+          const gwaPatterns = [
+            /\b(?:GWA|General Weighted Average)\b[^0-9]{0,40}([0-9]{1,3}(?:[.,][0-9]+)?)/i,
+            /\bWeighted Average\b[^0-9]{0,40}([0-9]{1,3}(?:[.,][0-9]+)?)/i,
+            /\bAverage\b[^0-9]{0,40}([0-9]{1,3}(?:[.,][0-9]+)?)/i,
+          ];
+          let gwa = null;
+          for (const rx of gwaPatterns) {
+            const m = compact.match(rx);
+            if (!m) continue;
+            const n = Number.parseFloat(String(m[1] || "").replace(",", "."));
+            if (Number.isFinite(n)) {
+              gwa = n;
+              break;
+            }
+          }
           const lines = src.split(/\r?\n/).map((v) => v.trim()).filter(Boolean);
           const subjectGrades = [];
           for (const line of lines) {
@@ -857,7 +870,7 @@ function forceRenderRequirementsInApp(frame, requirements, requiredGradeRaw = ""
             if (!nums?.length) continue;
             const candidates = nums
               .map((n) => Number.parseFloat(n))
-              .filter((n) => Number.isFinite(n) && n >= 50 && n <= 100);
+              .filter((n) => Number.isFinite(n) && ((n >= 1 && n <= 5) || (n >= 50 && n <= 100)));
             if (!candidates.length) continue;
             subjectGrades.push(candidates[candidates.length - 1]);
           }
@@ -865,6 +878,7 @@ function forceRenderRequirementsInApp(frame, requirements, requiredGradeRaw = ""
             gwa,
             subjectGrades,
             minSubjectGrade: subjectGrades.length ? Math.min(...subjectGrades) : null,
+            maxSubjectGrade: subjectGrades.length ? Math.max(...subjectGrades) : null,
           };
         };
 
@@ -921,6 +935,23 @@ function forceRenderRequirementsInApp(frame, requirements, requiredGradeRaw = ""
             }
             if (!hasRequiredGrade) {
               setStatus("neutral", `Readable grades detected. GWA: ${metrics.gwa}. Lowest subject grade: ${metrics.minSubjectGrade}.`);
+              return;
+            }
+            const allGrades = [
+              ...metrics.subjectGrades,
+              ...(Number.isFinite(metrics.gwa) ? [metrics.gwa] : []),
+            ];
+            const isPointScale = allGrades.length > 0 && Math.max(...allGrades) <= 5;
+            if (isPointScale && requiredGrade > 5) {
+              setStatus("neutral", "Detected 1.00–5.00 grading scale. Set scholarship required grade in the same scale (e.g., 2.00).");
+              return;
+            }
+            if (isPointScale) {
+              if (metrics.gwa > requiredGrade || metrics.maxSubjectGrade > requiredGrade) {
+                setStatus("fail", `Below requirement (${requiredGrade}). Detected GWA: ${metrics.gwa}. Highest subject grade: ${metrics.maxSubjectGrade}.`);
+                return;
+              }
+              setStatus("ok", `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Highest subject grade: ${metrics.maxSubjectGrade}.`);
               return;
             }
             if (metrics.gwa < requiredGrade || metrics.minSubjectGrade < requiredGrade) {

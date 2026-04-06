@@ -1691,8 +1691,21 @@ async function prefillFromCurrentUser() {
   function parseCogMetricsFromText(text) {
     const src = String(text || "");
     const compact = src.replace(/\s+/g, " ");
-    const gwaMatch = compact.match(/\b(?:GWA|General Weighted Average)\b[^0-9]{0,20}([0-9]{1,3}(?:\.[0-9]+)?)/i);
-    const gwa = gwaMatch ? Number.parseFloat(gwaMatch[1]) : null;
+    const gwaPatterns = [
+      /\b(?:GWA|General Weighted Average)\b[^0-9]{0,40}([0-9]{1,3}(?:[.,][0-9]+)?)/i,
+      /\bWeighted Average\b[^0-9]{0,40}([0-9]{1,3}(?:[.,][0-9]+)?)/i,
+      /\bAverage\b[^0-9]{0,40}([0-9]{1,3}(?:[.,][0-9]+)?)/i,
+    ];
+    let gwa = null;
+    for (const rx of gwaPatterns) {
+      const m = compact.match(rx);
+      if (!m) continue;
+      const n = Number.parseFloat(String(m[1] || "").replace(",", "."));
+      if (Number.isFinite(n)) {
+        gwa = n;
+        break;
+      }
+    }
 
     const lines = src
       .split(/\r?\n/)
@@ -1715,7 +1728,7 @@ async function prefillFromCurrentUser() {
 
       const candidates = nums
         .map((n) => Number.parseFloat(n))
-        .filter((n) => Number.isFinite(n) && n >= 50 && n <= 100);
+        .filter((n) => Number.isFinite(n) && ((n >= 1 && n <= 5) || (n >= 50 && n <= 100)));
       if (!candidates.length) continue;
       subjectGrades.push(candidates[candidates.length - 1]);
     }
@@ -1724,7 +1737,38 @@ async function prefillFromCurrentUser() {
       gwa,
       subjectGrades,
       minSubjectGrade: subjectGrades.length ? Math.min(...subjectGrades) : null,
+      maxSubjectGrade: subjectGrades.length ? Math.max(...subjectGrades) : null,
     };
+  }
+
+  function compareCogAgainstThreshold(metrics, requiredGrade) {
+    const grades = [
+      ...Array.isArray(metrics?.subjectGrades) ? metrics.subjectGrades : [],
+      ...(Number.isFinite(metrics?.gwa) ? [metrics.gwa] : []),
+    ];
+    const isPointScale = grades.length > 0 && Math.max(...grades) <= 5;
+    const threshold = Number(requiredGrade);
+
+    if (!Number.isFinite(threshold)) {
+      return { comparable: false, pass: false, reason: "No grade threshold configured." };
+    }
+
+    if (isPointScale) {
+      if (threshold > 5) {
+        return {
+          comparable: false,
+          pass: false,
+          reason: "Detected 1.00–5.00 grading scale. Set scholarship required grade in the same scale (e.g., 2.00).",
+        };
+      }
+      const gwaPass = Number.isFinite(metrics?.gwa) && metrics.gwa <= threshold;
+      const subjectPass = Number.isFinite(metrics?.maxSubjectGrade) && metrics.maxSubjectGrade <= threshold;
+      return { comparable: true, pass: gwaPass && subjectPass, isPointScale, threshold };
+    }
+
+    const gwaPass = Number.isFinite(metrics?.gwa) && metrics.gwa >= threshold;
+    const subjectPass = Number.isFinite(metrics?.minSubjectGrade) && metrics.minSubjectGrade >= threshold;
+    return { comparable: true, pass: gwaPass && subjectPass, isPointScale, threshold };
   }
 
   async function extractTextFromCogFile(file) {
@@ -1842,21 +1886,38 @@ async function prefillFromCurrentUser() {
       return;
     }
 
-    const gwaPass = metrics.gwa >= requiredGrade;
-    const subjectPass = metrics.minSubjectGrade >= requiredGrade;
-    if (!gwaPass || !subjectPass) {
+    const cmp = compareCogAgainstThreshold(metrics, requiredGrade);
+    if (!cmp.comparable) {
       setCogValidationFeedback(
         statusEl,
-        "fail",
-        `Below requirement (${requiredGrade}). Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
+        "neutral",
+        cmp.reason
       );
+      return;
+    }
+    if (!cmp.pass) {
+      if (cmp.isPointScale) {
+        setCogValidationFeedback(
+          statusEl,
+          "fail",
+          `Below requirement (${requiredGrade}). Detected GWA: ${metrics.gwa}. Highest detected subject grade: ${metrics.maxSubjectGrade}.`
+        );
+      } else {
+        setCogValidationFeedback(
+          statusEl,
+          "fail",
+          `Below requirement (${requiredGrade}). Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
+        );
+      }
       return;
     }
 
     setCogValidationFeedback(
       statusEl,
       "ok",
-      `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
+      cmp.isPointScale
+        ? `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Highest detected subject grade: ${metrics.maxSubjectGrade}.`
+        : `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
     );
   }
 
@@ -1905,9 +1966,17 @@ async function prefillFromCurrentUser() {
       return { ok: false, error: "Unable to detect subject grades in the uploaded Certificate of Grades PDF." };
     }
 
-    const gwaPass = metrics.gwa >= requiredGrade;
-    const subjectPass = metrics.minSubjectGrade >= requiredGrade;
-    if (!gwaPass || !subjectPass) {
+    const cmp = compareCogAgainstThreshold(metrics, requiredGrade);
+    if (!cmp.comparable) {
+      return { ok: false, error: cmp.reason };
+    }
+    if (!cmp.pass) {
+      if (cmp.isPointScale) {
+        return {
+          ok: false,
+          error: `COG check failed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Highest detected subject grade: ${metrics.maxSubjectGrade}.`,
+        };
+      }
       return {
         ok: false,
         error: `COG check failed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`,
