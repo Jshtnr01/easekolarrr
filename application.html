@@ -771,10 +771,12 @@ window.addEventListener("DOMContentLoaded", async () => {
       preview.className = "preview";
       preview.id = `req_preview_${idx}`;
       preview.innerHTML = `<img alt="${req} preview" />`;
+      const cogStatus = document.createElement("div");
+      cogStatus.className = "status";
 
       const img = preview.querySelector("img");
       let objectUrl = null;
-      input.addEventListener("change", () => {
+      input.addEventListener("change", async () => {
         const file = input.files?.[0];
         const textEl = document.getElementById(`req_file_label_${idx}`);
         if (textEl) textEl.textContent = file?.name || "Select file";
@@ -792,12 +794,14 @@ window.addEventListener("DOMContentLoaded", async () => {
           preview.classList.remove("active");
           img.removeAttribute("src");
         }
+        await validateCogInputLive(input, cogStatus);
       });
 
       fileLabel.appendChild(input);
       cell.appendChild(label);
       cell.appendChild(fileLabel);
       cell.appendChild(preview);
+      cell.appendChild(cogStatus);
       reqUploads.appendChild(cell);
     });
     return true;
@@ -1714,6 +1718,81 @@ async function prefillFromCurrentUser() {
     return chunks.join("\n");
   }
 
+  function setCogInlineStatus(statusEl, tone, message) {
+    if (!statusEl) return;
+    if (!message) {
+      statusEl.className = "status";
+      statusEl.textContent = "";
+      return;
+    }
+    statusEl.className = `status ${tone || "neutral"}`;
+    statusEl.textContent = message;
+  }
+
+  async function validateCogInputLive(inputEl, statusEl) {
+    if (!inputEl || inputEl?.dataset?.requirementType !== "certificate_of_grades") {
+      setCogInlineStatus(statusEl, "", "");
+      return;
+    }
+
+    const file = inputEl.files?.[0];
+    if (!file) {
+      setCogInlineStatus(statusEl, "", "");
+      return;
+    }
+
+    setCogInlineStatus(statusEl, "neutral", "Checking Certificate of Grades...");
+    const selected = dropdown?.options?.[dropdown.selectedIndex];
+    let requiredGrade = parseRequiredGradeThreshold(selected?.dataset?.grade);
+    if (requiredGrade == null) {
+      const row = resolveScholarshipRowFromCurrentState();
+      requiredGrade = parseRequiredGradeThreshold(row?.grade);
+    }
+    if (requiredGrade == null) {
+      setCogInlineStatus(statusEl, "neutral", "Grade checker skipped: this scholarship has no required grade configured.");
+      return;
+    }
+
+    let cogText = "";
+    try {
+      cogText = await extractTextFromCogFile(file);
+    } catch (err) {
+      setCogInlineStatus(statusEl, "fail", String(err?.message || err));
+      return;
+    }
+
+    const metrics = parseCogMetricsFromText(cogText);
+    if (metrics.gwa == null && (!metrics.subjectGrades.length || metrics.minSubjectGrade == null)) {
+      setCogInlineStatus(statusEl, "fail", "No readable GWA or subject grades were detected in this file.");
+      return;
+    }
+    if (metrics.gwa == null) {
+      setCogInlineStatus(statusEl, "fail", "GWA was not detected in the uploaded Certificate of Grades.");
+      return;
+    }
+    if (!metrics.subjectGrades.length || metrics.minSubjectGrade == null) {
+      setCogInlineStatus(statusEl, "fail", "Subject grades were not detected in the uploaded Certificate of Grades.");
+      return;
+    }
+
+    const gwaPass = metrics.gwa >= requiredGrade;
+    const subjectPass = metrics.minSubjectGrade >= requiredGrade;
+    if (!gwaPass || !subjectPass) {
+      setCogInlineStatus(
+        statusEl,
+        "fail",
+        `Below requirement (${requiredGrade}). Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
+      );
+      return;
+    }
+
+    setCogInlineStatus(
+      statusEl,
+      "ok",
+      `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
+    );
+  }
+
   async function validateCogRequirementBeforeSubmit(reqRootEl) {
     const root = reqRootEl || reqUploads;
     if (!root) return { ok: true };
@@ -1864,15 +1943,21 @@ async function prefillFromCurrentUser() {
       input.name = req.replace(/\s+/g, "_").toLowerCase();
       input.className = "sr-only";
       input.required = true;
+      input.dataset.requirementLabel = req;
+      if (isCertificateOfGradesRequirement(req)) {
+        input.dataset.requirementType = "certificate_of_grades";
+      }
 
       const preview = document.createElement("div");
       preview.className = "preview";
       preview.id = `req_preview_${idx}`;
       preview.innerHTML = `<img alt="${req} preview" />`;
+      const cogStatus = document.createElement("div");
+      cogStatus.className = "status";
 
       const img = preview.querySelector("img");
       let objectUrl = null;
-      input.addEventListener("change", () => {
+      input.addEventListener("change", async () => {
         const file = input.files?.[0];
         const textEl = document.getElementById(`req_file_label_${idx}`);
         if (textEl) textEl.textContent = file?.name || "Select file";
@@ -1890,12 +1975,14 @@ async function prefillFromCurrentUser() {
           preview.classList.remove("active");
           img.removeAttribute("src");
         }
+        await validateCogInputLive(input, cogStatus);
       });
 
       fileLabel.appendChild(input);
       cell.appendChild(label);
       cell.appendChild(fileLabel);
       cell.appendChild(preview);
+      cell.appendChild(cogStatus);
       reqUploads.appendChild(cell);
     });
   }
