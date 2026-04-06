@@ -144,6 +144,25 @@
     .rejected-btn { background: #dc2626; color: white; }
     .pending-btn { background: #d97706; color: white; }
     .filter-btn:hover { opacity: 0.8; }
+    .kv-head,
+    .kv-values {
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.45;
+    }
+    .kv-head {
+      color: var(--th-text);
+      font-weight: 700;
+      white-space: pre-line;
+      width: 160px;
+    }
+    .kv-values .line {
+      margin: 0 0 4px;
+      word-break: break-word;
+    }
+    .kv-values .line:last-child {
+      margin-bottom: 0;
+    }
 
     .table-wrap {
       width: 100%;
@@ -196,10 +215,8 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Name</th>
-            <th>Program</th>
-            <th>Campus</th>
-            <th>Status</th>
+            <th>Row Header</th>
+            <th>Values</th>
           </tr>
         </thead>
         <tbody id="historyTable"></tbody>
@@ -300,13 +317,20 @@ function renderApplications() {
   }
 
   filtered.forEach((row, index) => {
+    const statusClass = row.status?.toLowerCase() || '';
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${index + 1}</td>
-      <td>${row.Name || 'N/A'}</td>
-      <td>${row.scholarship_program || 'N/A'}</td>
-      <td>${row.campus || 'N/A'}</td>
-      <td><span class="status ${row.status?.toLowerCase() || ''}">${row.status || 'N/A'}</span></td>
+      <td class="kv-head">Name
+Program
+Campus
+Status</td>
+      <td class="kv-values">
+        <p class="line">${row.Name || 'N/A'}</p>
+        <p class="line">${row.scholarship_program || 'N/A'}</p>
+        <p class="line">${row.campus || 'N/A'}</p>
+        <p class="line"><span class="status ${statusClass}">${row.status || 'N/A'}</span></p>
+      </td>
     `;
     tbody.appendChild(tr);
   });
