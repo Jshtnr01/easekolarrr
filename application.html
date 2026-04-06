@@ -188,6 +188,16 @@
       /* subtle hover lift */
       .requirements-grid > div { transition: transform .16s ease, background .16s ease; }
       .requirements-grid > div:hover { transform: translateY(-3px); background: rgba(255,255,255,0.02); border-radius:10px; }
+      .requirements-grid > div{
+        display:flex;
+        flex-direction:column;
+      }
+      .req-label{
+        display:flex;
+        align-items:flex-start;
+        min-height:44px; /* keeps upload boxes aligned even when labels wrap */
+        margin-bottom:6px;
+      }
 
       /* small utility */
       .muted { color:var(--muted); font-size:12px; }
