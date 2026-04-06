@@ -17,6 +17,7 @@
       if (isDark) document.documentElement.classList.add('dark-boot');
     })();
   </script>
+  <script src="shared/device-context.js"></script>
   
 
   <!-- Theming + layout -->
@@ -763,7 +764,9 @@
     let notificationPollHandle = null;
     let notificationChannel = null;
     let notificationRefreshTimer = null;
-    const COLLAPSED_NOTIFICATION_COUNT = 5;
+    const DESKTOP_COLLAPSED_NOTIFICATION_COUNT = 5;
+    const TABLET_COLLAPSED_NOTIFICATION_COUNT = 4;
+    const MOBILE_COLLAPSED_NOTIFICATION_COUNT = 3;
     let notificationsExpanded = false;
     let latestNotifications = [];
     let audioCtx = null;
@@ -997,6 +1000,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   fetchApplicationsSnapshot(studentEmail);
 });
 
+window.addEventListener('ease-device-change', () => {
+  if (!latestNotifications.length) return;
+  renderNotificationsList(latestNotifications);
+});
+
 window.addEventListener('beforeunload', () => {
   if (notificationRefreshTimer) {
     window.clearTimeout(notificationRefreshTimer);
@@ -1015,13 +1023,21 @@ window.addEventListener('beforeunload', () => {
 function updateNotificationsToggle(totalCount) {
   const btn = document.getElementById('notificationsToggleBtn');
   if (!btn) return;
-  if (totalCount <= COLLAPSED_NOTIFICATION_COUNT) {
+  const collapsedCount = getCollapsedNotificationCount();
+  if (totalCount <= collapsedCount) {
     btn.style.display = 'none';
     return;
   }
   btn.style.display = 'inline-flex';
-  btn.textContent = notificationsExpanded ? 'Show latest 5' : 'Show all';
+  btn.textContent = notificationsExpanded ? `Show latest ${collapsedCount}` : 'Show all';
   btn.setAttribute('aria-expanded', notificationsExpanded ? 'true' : 'false');
+}
+
+function getCollapsedNotificationCount() {
+  const type = window.easeDevice?.type;
+  if (type === 'mobile') return MOBILE_COLLAPSED_NOTIFICATION_COUNT;
+  if (type === 'tablet') return TABLET_COLLAPSED_NOTIFICATION_COUNT;
+  return DESKTOP_COLLAPSED_NOTIFICATION_COUNT;
 }
 
 function formatNotificationTimestamp(isoValue) {
@@ -1048,9 +1064,10 @@ function renderNotificationsList(data = []) {
     return;
   }
 
+  const collapsedCount = getCollapsedNotificationCount();
   const visibleItems = notificationsExpanded
     ? data
-    : data.slice(0, COLLAPSED_NOTIFICATION_COUNT);
+    : data.slice(0, collapsedCount);
 
   notiList.innerHTML = "";
   visibleItems.forEach((item) => {

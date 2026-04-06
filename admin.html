@@ -11,6 +11,7 @@
       document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     })();
   </script>
+  <script src="shared/device-context.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
@@ -639,6 +640,24 @@ tbody tr:nth-child(even) {
 .table-panel table tbody tr:hover{
   background-color: #f3f6fe !important;
   transition: 0.2s;
+}
+[data-device='tablet'] .table-scroll{
+  height: min(460px, calc(100svh - 280px));
+  min-height: min(460px, calc(100svh - 280px));
+}
+[data-device='mobile'] .table-scroll{
+  height: min(420px, calc(100svh - 240px));
+  min-height: min(420px, calc(100svh - 240px));
+}
+[data-device='tablet'] .table-scroll table{
+  min-width: 980px;
+}
+[data-device='mobile'] .table-scroll table{
+  min-width: 900px;
+}
+[data-device='mobile'] .action-menu{
+  right: auto;
+  left: 0;
 }
 [data-theme='dark'] .table-panel table th{
   background-color: #14284d !important;
@@ -1350,6 +1369,7 @@ window.toggleActionMenu = function(id) {
 
   if (menu.classList.contains("hidden")) return;
   menu.classList.remove("up");
+  const deviceType = window.easeDevice?.type || "desktop";
 
   // Open upward when there is not enough visible space below.
   const host = menu.closest(".table-scroll");
@@ -1360,7 +1380,7 @@ window.toggleActionMenu = function(id) {
   const visibleTop = Math.max(0, hostRect.top);
   const spaceBelow = visibleBottom - btnRect.bottom;
   const spaceAbove = btnRect.top - visibleTop;
-  if (spaceBelow < menuHeight && spaceAbove >= menuHeight) {
+  if ((deviceType !== "desktop" && spaceAbove > spaceBelow) || (spaceBelow < menuHeight && spaceAbove >= menuHeight)) {
     menu.classList.add("up");
   }
 
