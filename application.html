@@ -1793,9 +1793,9 @@ async function prefillFromCurrentUser() {
     if (cmp.gwaPass === false) {
       details.push(`Detected GWA: ${metrics.gwa}`);
     }
-    if (cmp.subjectPass === false) {
+      if (cmp.subjectPass === false) {
       if (cmp.isPointScale) {
-        details.push(`Worst subject grade: ${metrics.maxSubjectGrade}`);
+        details.push(`Lowest subject grade: ${metrics.maxSubjectGrade}`);
       } else {
         details.push(`Lowest detected subject grade: ${metrics.minSubjectGrade}`);
       }
@@ -1915,7 +1915,7 @@ async function prefillFromCurrentUser() {
         statusEl,
         "neutral",
         inferredPointScale
-          ? `Readable grades detected. GWA: ${metrics.gwa}. Best subject grade: ${metrics.minSubjectGrade}. Worst subject grade: ${metrics.maxSubjectGrade}. No grade threshold is configured for this scholarship.`
+          ? `Readable grades detected. GWA: ${metrics.gwa}. Highest subject grade: ${metrics.minSubjectGrade}. Lowest subject grade: ${metrics.maxSubjectGrade}. No grade threshold is configured for this scholarship.`
           : `Readable grades detected. GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}. No grade threshold is configured for this scholarship.`
       );
       return;
@@ -1943,7 +1943,7 @@ async function prefillFromCurrentUser() {
       statusEl,
       "ok",
       cmp.isPointScale
-        ? `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Best subject grade: ${metrics.minSubjectGrade}. Worst subject grade: ${metrics.maxSubjectGrade}.`
+        ? `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Highest subject grade: ${metrics.minSubjectGrade}. Lowest subject grade: ${metrics.maxSubjectGrade}.`
         : `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
     );
   }
