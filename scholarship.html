@@ -948,7 +948,11 @@ function forceRenderRequirementsInApp(frame, requirements, requiredGradeRaw = ""
               return;
             }
             if (!hasRequiredGrade) {
-              setStatus("neutral", `Readable grades detected. GWA: ${metrics.gwa}. Lowest subject grade: ${metrics.minSubjectGrade}.`);
+              if (isPointScale) {
+                setStatus("neutral", `Readable grades detected. GWA: ${metrics.gwa}. Best subject grade: ${metrics.minSubjectGrade}. Worst subject grade: ${metrics.maxSubjectGrade}.`);
+              } else {
+                setStatus("neutral", `Readable grades detected. GWA: ${metrics.gwa}. Lowest subject grade: ${metrics.minSubjectGrade}.`);
+              }
               return;
             }
             const allGrades = [
@@ -963,12 +967,12 @@ function forceRenderRequirementsInApp(frame, requirements, requiredGradeRaw = ""
             if (isPointScale) {
               const failParts = [];
               if (metrics.gwa > requiredGrade) failParts.push(`Detected GWA: ${metrics.gwa}`);
-              if (metrics.maxSubjectGrade > requiredGrade) failParts.push(`Highest subject grade: ${metrics.maxSubjectGrade}`);
+              if (metrics.maxSubjectGrade > requiredGrade) failParts.push(`Worst subject grade: ${metrics.maxSubjectGrade}`);
               if (failParts.length) {
                 setStatus("fail", `Below requirement (${requiredGrade}). ${failParts.join(". ")}.`);
                 return;
               }
-              setStatus("ok", `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Highest subject grade: ${metrics.maxSubjectGrade}.`);
+              setStatus("ok", `COG passed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Best subject grade: ${metrics.minSubjectGrade}. Worst subject grade: ${metrics.maxSubjectGrade}.`);
               return;
             }
             const failParts = [];
