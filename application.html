@@ -1780,12 +1780,27 @@ async function prefillFromCurrentUser() {
       }
       const gwaPass = Number.isFinite(metrics?.gwa) && metrics.gwa <= threshold;
       const subjectPass = Number.isFinite(metrics?.maxSubjectGrade) && metrics.maxSubjectGrade <= threshold;
-      return { comparable: true, pass: gwaPass && subjectPass, isPointScale, threshold };
+      return { comparable: true, pass: gwaPass && subjectPass, isPointScale, threshold, gwaPass, subjectPass };
     }
 
     const gwaPass = Number.isFinite(metrics?.gwa) && metrics.gwa >= threshold;
     const subjectPass = Number.isFinite(metrics?.minSubjectGrade) && metrics.minSubjectGrade >= threshold;
-    return { comparable: true, pass: gwaPass && subjectPass, isPointScale, threshold };
+    return { comparable: true, pass: gwaPass && subjectPass, isPointScale, threshold, gwaPass, subjectPass };
+  }
+
+  function buildCogFailureMessage(cmp, metrics, requiredGrade) {
+    const details = [];
+    if (cmp.gwaPass === false) {
+      details.push(`Detected GWA: ${metrics.gwa}`);
+    }
+    if (cmp.subjectPass === false) {
+      if (cmp.isPointScale) {
+        details.push(`Highest detected subject grade: ${metrics.maxSubjectGrade}`);
+      } else {
+        details.push(`Lowest detected subject grade: ${metrics.minSubjectGrade}`);
+      }
+    }
+    return `Below requirement (${requiredGrade}). ${details.join(". ")}.`;
   }
 
   async function extractTextFromCogFile(file) {
@@ -1913,19 +1928,11 @@ async function prefillFromCurrentUser() {
       return;
     }
     if (!cmp.pass) {
-      if (cmp.isPointScale) {
-        setCogValidationFeedback(
-          statusEl,
-          "fail",
-          `Below requirement (${requiredGrade}). Detected GWA: ${metrics.gwa}. Highest detected subject grade: ${metrics.maxSubjectGrade}.`
-        );
-      } else {
-        setCogValidationFeedback(
-          statusEl,
-          "fail",
-          `Below requirement (${requiredGrade}). Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`
-        );
-      }
+      setCogValidationFeedback(
+        statusEl,
+        "fail",
+        buildCogFailureMessage(cmp, metrics, requiredGrade)
+      );
       return;
     }
 
@@ -1988,15 +1995,9 @@ async function prefillFromCurrentUser() {
       return { ok: false, error: cmp.reason };
     }
     if (!cmp.pass) {
-      if (cmp.isPointScale) {
-        return {
-          ok: false,
-          error: `COG check failed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Highest detected subject grade: ${metrics.maxSubjectGrade}.`,
-        };
-      }
       return {
         ok: false,
-        error: `COG check failed. Required: ${requiredGrade}. Detected GWA: ${metrics.gwa}. Lowest detected subject grade: ${metrics.minSubjectGrade}.`,
+        error: `COG check failed. ${buildCogFailureMessage(cmp, metrics, requiredGrade)}`,
       };
     }
 
