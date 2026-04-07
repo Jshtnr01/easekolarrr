@@ -664,24 +664,8 @@
             dates.
           </p>
 
-          <!-- Top controls (Export buttons & logo upload) -->
+          <!-- Top controls -->
           <div class="top-controls">
-            <label style="display: flex; gap: 8px; align-items: center">
-              <input
-                id="logoInput"
-                type="file"
-                accept="image/*"
-                style="display: none"
-              />
-              <button
-                id="uploadLogoBtn"
-                class="filter-btn"
-                title="Upload logo (optional)"
-              >
-                Upload Logo
-              </button>
-            </label>
-
             <button id="exportPdfBtn" class="action-btn pdf-btn">
               Export PDF
             </button>
@@ -830,7 +814,6 @@
 
       let historyData = [];
       let activeFilter = "All";
-      let uploadedLogoDataUrl = null; // holds logo data URL if uploaded
       const PAGE_SIZE = 20;
       let page = 0;
       let hasMore = true;
@@ -1014,22 +997,15 @@
         document.getElementById("reportDate").textContent =
           "Generated: " + new Date().toLocaleString();
 
-        // Insert logo (if uploaded) or fallback
+        // Insert report title marker
         const logoHolder = document.getElementById("logoHolder");
         logoHolder.innerHTML = ""; // clear
-        if (uploadedLogoDataUrl) {
-          const img = document.createElement("img");
-          img.src = uploadedLogoDataUrl;
-          img.id = "logoPreview";
-          logoHolder.appendChild(img);
-        } else {
-          const span = document.createElement("div");
-          span.style.fontWeight = 700;
-          span.style.fontSize = "16px";
-          span.style.color = "#000";
-          span.textContent = "EaseKolar";
-          logoHolder.appendChild(span);
-        }
+        const span = document.createElement("div");
+        span.style.fontWeight = 700;
+        span.style.fontSize = "16px";
+        span.style.color = "#000";
+        span.textContent = "EaseKolar";
+        logoHolder.appendChild(span);
 
         // Render the pdfPrintArea to an image using html2canvas
         const printArea = document.getElementById("pdfPrintArea");
@@ -1123,25 +1099,6 @@
         // Download
         pdf.save("application_history_report.pdf");
       }
-
-      // --- Logo upload handling ---
-      const logoInput = document.getElementById("logoInput");
-      const uploadLogoBtn = document.getElementById("uploadLogoBtn");
-
-      uploadLogoBtn.addEventListener("click", () => logoInput.click());
-
-      logoInput.addEventListener("change", async (ev) => {
-        const file = ev.target.files?.[0];
-        if (!file) return;
-        // read as data URL
-        const reader = new FileReader();
-        reader.onload = () => {
-          uploadedLogoDataUrl = reader.result;
-          // optionally show a tiny thumbnail on the button
-          uploadLogoBtn.textContent = "Logo uploaded";
-        };
-        reader.readAsDataURL(file);
-      });
 
       // --- Button wiring ---
       const exportPdfBtn = document.getElementById("exportPdfBtn");
