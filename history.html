@@ -225,9 +225,8 @@
         display: flex;
         gap: 8px;
         align-items: center;
-        position: absolute;
-        top: 24px;
-        right: 24px;
+        justify-content: flex-end;
+        margin-bottom: 10px;
       }
 
       .filter-row {
@@ -658,18 +657,17 @@
       <!-- Main area -->
       <main class="content">
         <div class="card">
-          <h1>Application History</h1>
-          <p>
-            Displays past scholarship decisions with review results and update
-            dates.
-          </p>
-
-          <!-- Top controls -->
           <div class="top-controls">
             <button id="exportPdfBtn" class="action-btn pdf-btn">
               Export PDF
             </button>
           </div>
+
+          <h1>Application History</h1>
+          <p>
+            Displays past scholarship decisions with review results and update
+            dates.
+          </p>
 
           <!-- Filter (dashboard-style) -->
           <div class="filter-toolbar">
