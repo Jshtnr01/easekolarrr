@@ -17,6 +17,7 @@
     href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
     rel="stylesheet"
   />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
   <!-- Light, soft UI design -->
   <style>
     /* === Existing Admin Styles (unchanged) === */
@@ -27,6 +28,7 @@
       --pill-bg: #eef2ff; --pill-border: #e1e8ff; --pill-text: #3f3f46; --link: #1d4ed8;
       --content-grad1: #fbfdff; --content-grad2: #f1f5fe;
       --kpi-total: #e8f3ff; --kpi-pending: #efe9ff; --kpi-approved: #fef7d7; --kpi-denied: #ffe7ea;
+      --metric-yellow-ico: #FFE19A; --metric-purple-ico: #DDD2FF; --metric-pink-ico: #FFD1E6; --metric-blue-ico: #D1E4FF;
       --card: #ffffff; --line: #dee6f3; --primary:#1c3d77; --primary-100:#eaf1ff;
     }
     [data-theme='dark']{
@@ -36,6 +38,7 @@
       --pill-bg: #1c2d4d; --pill-border: #25406f; --pill-text: #dbe8ff; --link: #9dc4ff;
       --content-grad1: #0e1a2f; --content-grad2: #0a1427;
       --kpi-total: #0e203e; --kpi-pending: #142045; --kpi-approved: #2a2a12; --kpi-denied: #3a1620;
+      --metric-yellow-ico: #3A3112; --metric-purple-ico: #2A2956; --metric-pink-ico: #452638; --metric-blue-ico: #1A2D56;
       --card:#0f1c3c; --line:#1c2c56; --primary:#9db7ff; --primary-100:#172b59;
     }
     /* === Admin Dropdown Styling === */
@@ -112,17 +115,19 @@
     .date-badge:empty{ display:none; }
     .theme-toggle{ background:var(--sidebar-active); border:1px solid var(--border);
       border-radius:999px; font-weight:700; cursor:pointer; padding:8px 12px;}
-    .card-container{ display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
-      gap:16px; margin-top:18px;}
-    .card{ background:var(--panel); border:1px solid var(--border); border-radius:18px;
-      padding:18px; box-shadow:0 6px 16px rgba(15,23,42,.04);}
-    .kpi-label{ font-size:13px; font-weight:600; color:#6b7280;}
-    [data-theme='dark'] .kpi-label{ color:#aab4c8;}
-    .kpi-value{ font-size:28px; font-weight:800;}
-    .card[data-variant="total"]{ background: var(--kpi-total);}
-    .card[data-variant="pending"]{ background: var(--kpi-pending);}
+    .card-container{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:20px; margin-top:18px; margin-bottom: clamp(18px, 2.2vw, 26px);}
+    .card{ display:flex; align-items:center; gap:12px; padding:18px 20px; border-radius:16px; box-shadow:0 6px 16px rgba(15,23,42,.04); border:1px solid var(--border); color:var(--text);}
+    .kpi-ico{ width:40px; height:40px; border-radius:12px; display:grid; place-items:center; font-weight:800; flex:0 0 40px; }
+    .kpi-value{ font-size:20px; font-weight:900; line-height:1;}
+    .kpi-label{ font-weight:700; color:#525F78; font-size:12px; margin-top:2px;}
     .card[data-variant="approved"]{ background: var(--kpi-approved);}
+    .card[data-variant="approved"] .kpi-ico{ background: var(--metric-yellow-ico);}
+    .card[data-variant="pending"]{ background: var(--kpi-pending);}
+    .card[data-variant="pending"] .kpi-ico{ background: var(--metric-purple-ico);}
     .card[data-variant="denied"]{ background: var(--kpi-denied);}
+    .card[data-variant="denied"] .kpi-ico{ background: var(--metric-pink-ico);}
+    .card[data-variant="total"]{ background: var(--kpi-total);}
+    .card[data-variant="total"] .kpi-ico{ background: var(--metric-blue-ico);}
     .table-panel{ margin-top:20px; background:var(--panel); border:1px solid var(--border);
       border-radius:18px; box-shadow:0 6px 16px rgba(15,23,42,.04);}
     table{ width:100%; border-collapse:collapse;}
@@ -667,32 +672,10 @@ tbody tr:nth-child(even) {
     gap: 14px !important;
   }
   .card-container .card{
-    display:flex;
-    align-items:center;
-    gap:12px;
     padding:14px 12px;
-    border-radius:16px;
-    border:0;
-    box-shadow:none;
   }
-  .card-container .card::before{
-    content:"";
-    width:38px;
-    height:38px;
-    border-radius:12px;
-    display:grid;
-    place-items:center;
-    font-size:16px;
-    font-weight:800;
-    color:#1f2a37;
-    flex:0 0 38px;
-  }
-  .card-container .card[data-variant="approved"]::before{ content:"\2713"; background:#F4D9EA; }
-  .card-container .card[data-variant="pending"]::before{ content:"\25F7"; background:#DACDFF; }
-  .card-container .card[data-variant="denied"]::before{ content:"\2715"; background:#F4D3E2; }
-  .card-container .card[data-variant="total"]::before{ content:"\25A6"; background:#CFE1FF; }
-  .card-container .kpi-value{ font-size:34px; line-height:1; }
-  .card-container .kpi-label{ font-size:12px; font-weight:800; margin-top:3px; }
+  .card-container .kpi-value{ font-size:20px; line-height:1; }
+  .card-container .kpi-label{ font-size:12px; font-weight:700; margin-top:2px; }
 
   .table-scroll{
     overflow-x: hidden !important;
@@ -767,10 +750,22 @@ tbody tr:nth-child(even) {
 
       <!-- KPIs -->
       <div class="card-container">
-        <div class="card" data-variant="total"><div class="kpi-label">Total</div><div id="totalApps" class="kpi-value">0</div></div>
-        <div class="card" data-variant="pending"><div class="kpi-label">Pending</div><div id="pendingApps" class="kpi-value">0</div></div>
-        <div class="card" data-variant="approved"><div class="kpi-label">Approved</div><div id="approvedApps" class="kpi-value">0</div></div>
-        <div class="card" data-variant="denied"><div class="kpi-label">Rejected</div><div id="deniedApps" class="kpi-value">0</div></div>
+        <div class="card" data-variant="approved">
+          <div class="kpi-ico"><i class="fa-solid fa-circle-check"></i></div>
+          <div><div id="approvedApps" class="kpi-value">0</div><div class="kpi-label">Approved</div></div>
+        </div>
+        <div class="card" data-variant="pending">
+          <div class="kpi-ico"><i class="fa-regular fa-clock"></i></div>
+          <div><div id="pendingApps" class="kpi-value">0</div><div class="kpi-label">Pending</div></div>
+        </div>
+        <div class="card" data-variant="denied">
+          <div class="kpi-ico"><i class="fa-solid fa-user-xmark"></i></div>
+          <div><div id="deniedApps" class="kpi-value">0</div><div class="kpi-label">Rejected</div></div>
+        </div>
+        <div class="card" data-variant="total">
+          <div class="kpi-ico"><i class="fa-solid fa-calendar-days"></i></div>
+          <div><div id="totalApps" class="kpi-value">0</div><div class="kpi-label">Total</div></div>
+        </div>
       </div>
 
       <!-- Table -->
