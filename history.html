@@ -381,6 +381,51 @@
         color: white;
       }
 
+      /* Mobile row-pair layout (same format as admin dashboard table) */
+      @media (max-width: 640px) {
+        .table-wrap {
+          overflow-x: hidden;
+        }
+        .table-wrap table {
+          min-width: 0 !important;
+          width: 100% !important;
+          table-layout: auto !important;
+        }
+        .table-wrap td.app-num {
+          width: 24px;
+          min-width: 24px;
+          text-align: center;
+          vertical-align: middle;
+          font-weight: 600;
+          color: #334155;
+          border-bottom: 1px solid var(--border) !important;
+        }
+        .table-wrap td.kv-head,
+        .table-wrap td.kv-values {
+          padding: 6px 8px !important;
+          border-bottom: 1px solid var(--border) !important;
+          vertical-align: middle;
+        }
+        .table-wrap td.kv-head {
+          width: 65px;
+          font-weight: 700;
+          color: #37527c;
+          background: #edf3fb;
+          text-align: center;
+          white-space: nowrap;
+          line-height: 1.2;
+        }
+        .table-wrap td.kv-values {
+          word-break: break-word;
+          overflow-wrap: anywhere;
+          white-space: normal;
+          line-height: 1.25;
+        }
+        .table-wrap tr.app-row-start td {
+          border-top: 6px solid transparent !important;
+        }
+      }
+
       /* Preview overlay (fullscreen) */
       .overlay {
         position: fixed;
@@ -820,7 +865,24 @@
       // --- Render onscreen table ---
       function renderHistory() {
         const tbody = document.getElementById("historyTable");
+        const tableHead = document.querySelector(".table-wrap thead");
+        const isMobileHistoryTable = window.matchMedia("(max-width: 640px)").matches;
         tbody.innerHTML = "";
+
+        if (tableHead) {
+          tableHead.innerHTML = isMobileHistoryTable
+            ? "<tr><th>#</th><th></th><th></th></tr>"
+            : `<tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Program</th>
+                <th>Campus</th>
+                <th>Address</th>
+                <th>Status</th>
+                <th>Decided At</th>
+                <th>Decided By</th>
+              </tr>`;
+        }
 
         let filtered = historyData;
         if (activeFilter !== "All") {
@@ -831,20 +893,44 @@
         }
 
         filtered.forEach((row, index) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${escapeHtml(row.Name || "N/A")}</td>
-        <td>${escapeHtml(row.Scholarship_Program || "N/A")}</td>
-        <td>${escapeHtml(row.Campus || "N/A")}</td>
-        <td>${escapeHtml(row.Address || "N/A")}</td>
-        <td><span class="status ${(
-          row.Status || ""
-        ).toLowerCase()}">${escapeHtml(row.Status || "N/A")}</span></td>
-        <td>${formatDate(row.decided_at)}</td>
-        <td>${escapeHtml(row.decided_by || "N/A")}</td>
-      `;
-          tbody.appendChild(tr);
+          const statusClass = (row.Status || "").toLowerCase();
+
+          if (!isMobileHistoryTable) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${escapeHtml(row.Name || "N/A")}</td>
+              <td>${escapeHtml(row.Scholarship_Program || "N/A")}</td>
+              <td>${escapeHtml(row.Campus || "N/A")}</td>
+              <td>${escapeHtml(row.Address || "N/A")}</td>
+              <td><span class="status ${statusClass}">${escapeHtml(row.Status || "N/A")}</span></td>
+              <td>${formatDate(row.decided_at)}</td>
+              <td>${escapeHtml(row.decided_by || "N/A")}</td>
+            `;
+            tbody.appendChild(tr);
+            return;
+          }
+
+          const details = [
+            { key: "Name", value: `${escapeHtml(row.Name || "N/A")}` },
+            { key: "Program", value: `${escapeHtml(row.Scholarship_Program || "N/A")}` },
+            { key: "Campus", value: `${escapeHtml(row.Campus || "N/A")}` },
+            { key: "Address", value: `${escapeHtml(row.Address || "N/A")}` },
+            { key: "Status", value: `<span class="status ${statusClass}">${escapeHtml(row.Status || "N/A")}</span>` },
+            { key: "Decided At", value: `${formatDate(row.decided_at)}` },
+            { key: "Decided By", value: `${escapeHtml(row.decided_by || "N/A")}` }
+          ];
+
+          details.forEach((detail, detailIdx) => {
+            const tr = document.createElement("tr");
+            if (detailIdx === 0) tr.classList.add("app-row-start");
+            tr.innerHTML = `
+              ${detailIdx === 0 ? `<td class="app-num" rowspan="${details.length}">${index + 1}</td>` : ""}
+              <td class="kv-head">${detail.key}</td>
+              <td class="kv-values">${detail.value}</td>
+            `;
+            tbody.appendChild(tr);
+          });
         });
       }
 
@@ -859,6 +945,13 @@
           renderHistory();
         });
       }
+      let historyResponsiveRefreshTimer = null;
+      window.addEventListener("resize", () => {
+        if (historyResponsiveRefreshTimer) window.clearTimeout(historyResponsiveRefreshTimer);
+        historyResponsiveRefreshTimer = window.setTimeout(() => {
+          renderHistory();
+        }, 140);
+      });
       function toggleLoadMore() {
         const el = document.getElementById("loadMoreBtn");
         if (el) el.style.display = hasMore ? "inline-flex" : "none";
