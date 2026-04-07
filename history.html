@@ -386,6 +386,9 @@
         .table-wrap {
           overflow-x: hidden;
         }
+        .table-wrap colgroup {
+          display: none;
+        }
         .table-wrap table {
           min-width: 0 !important;
           width: 100% !important;
@@ -416,10 +419,13 @@
           line-height: 1.2;
         }
         .table-wrap td.kv-values {
+          width: auto !important;
+          min-width: 0;
           word-break: break-word;
           overflow-wrap: anywhere;
           white-space: normal;
           line-height: 1.25;
+          padding-right: 10px !important;
         }
         .table-wrap tr.app-row-start td {
           border-top: 6px solid transparent !important;
