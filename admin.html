@@ -1187,31 +1187,13 @@ window.closeFileMenu = function() {
 
 async function loadDashboardStats() {
   try {
-    // [OK] Use 'supabase' (not supabaseClient)
     const { data, error } = await supabase
       .from("applicants_iskolar")
       .select("status")
       .in("campus", ADMIN_CAMPUS_VARIANTS);
 
     if (error) throw error;
-
-    // Count totals by status (treat "Processing" as pending)
-    const total = data.length;
-    const pending = data.filter(a => {
-      const s = (a.status || "").toLowerCase().trim();
-      return s === "pending" || s === "processing";
-    }).length;
-    const approved = data.filter(a => (a.status || "").toLowerCase().trim() === "approved").length;
-    const rejected = data.filter(a => (a.status || "").toLowerCase().trim() === "rejected").length;
-    const denied = rejected; // maintain legacy variable used in logging
-
-    // Update the numbers in the cards
-    document.getElementById("totalApps").textContent = total;
-    document.getElementById("pendingApps").textContent = pending;
-    document.getElementById("approvedApps").textContent = approved;
-    document.getElementById("deniedApps").textContent = rejected;
-
-    console.log("[OK] Dashboard stats updated:", { total, pending, approved, denied });
+    await updateAdminKpis(Array.isArray(data) ? data : []);
   } catch (err) {
     console.error("[ERROR] Error loading dashboard stats:", err.message);
   }
@@ -1562,18 +1544,22 @@ async function fetchApplicants() {
   if (error) {
     console.error("Error fetching applicants:", error);
     tableBody.innerHTML = `<tr><td colspan='${colSpan}'>Failed to load applicants (check console)</td></tr>`;
+    await updateAdminKpis([]);
     return;
   }
 
-  if (!data || data.length === 0) {
+  const applicantRows = Array.isArray(data) ? data : [];
+  await updateAdminKpis(applicantRows);
+
+  if (!applicantRows.length) {
     tableBody.innerHTML = `<tr><td colspan='${colSpan}'>No applicants found in database.</td></tr>`;
     return;
   }
 
-  window.allApplicants = data;
+  window.allApplicants = applicantRows;
 
   const filter = (currentStatusFilter || 'All').toLowerCase();
-  const visibleApplicants = data.filter((app) => {
+  const visibleApplicants = applicantRows.filter((app) => {
     const status = (app.status || 'Pending').trim().toLowerCase();
     const isUnderReview = (status === 'pending' || status === 'processing');
     if (!isUnderReview) return false;
@@ -1581,18 +1567,12 @@ async function fetchApplicants() {
     return status === filter;
   });
 
-  let approvedCount = 0;
-  let rejectedCount = 0;
-  let pendingCount = 0;
-
-  data.forEach((app) => {
-    const normalizedStatus = (app.status || "").trim().toLowerCase();
-    if (normalizedStatus === "approved") approvedCount++;
-    else if (normalizedStatus === "rejected") rejectedCount++;
-    else if (normalizedStatus === "pending" || normalizedStatus === "processing") pendingCount++;
-  });
-
   tableBody.innerHTML = "";
+
+  if (!visibleApplicants.length) {
+    tableBody.innerHTML = `<tr><td colspan='${colSpan}'>No applicants match the selected filter.</td></tr>`;
+    return;
+  }
 
   visibleApplicants.forEach((app, index) => {
     const status = app.status || "Pending";
@@ -1653,10 +1633,47 @@ async function fetchApplicants() {
     });
   });
 
-  document.getElementById("totalApps").textContent = data.length;
+}
+
+async function getHistoryDecisionCounts() {
+  const counts = { approved: 0, rejected: 0 };
+  if (!ADMIN_CAMPUS) return counts;
+
+  const { data, error } = await supabase
+    .from("history_applicants")
+    .select("Status, Campus")
+    .ilike("Campus", `%${ADMIN_CAMPUS}%`)
+    .in("Status", ["Approved", "Rejected"]);
+
+  if (error) {
+    console.error("Error fetching history counts:", error);
+    return counts;
+  }
+
+  (data || []).forEach((row) => {
+    const status = String(row?.Status || "").trim().toLowerCase();
+    if (status === "approved") counts.approved++;
+    if (status === "rejected") counts.rejected++;
+  });
+
+  return counts;
+}
+
+async function updateAdminKpis(applicantRows) {
+  const pendingCount = (applicantRows || []).reduce((acc, app) => {
+    const status = String(app?.status || "").trim().toLowerCase();
+    return acc + (status === "pending" || status === "processing" ? 1 : 0);
+  }, 0);
+
+  const historyCounts = await getHistoryDecisionCounts();
+  const approvedCount = historyCounts.approved;
+  const rejectedCount = historyCounts.rejected;
+  const totalCount = pendingCount + approvedCount + rejectedCount;
+
   document.getElementById("approvedApps").textContent = approvedCount;
   document.getElementById("deniedApps").textContent = rejectedCount;
   document.getElementById("pendingApps").textContent = pendingCount;
+  document.getElementById("totalApps").textContent = totalCount;
 }
 // === Send Message Function ===
 window.sendMessage = async function(applicantId) {
