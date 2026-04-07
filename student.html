@@ -924,6 +924,8 @@
     let notificationPollHandle = null;
     let notificationChannel = null;
     let notificationRefreshTimer = null;
+    let applicationChannel = null;
+    let applicationRefreshTimer = null;
     const DESKTOP_COLLAPSED_NOTIFICATION_COUNT = 5;
     const TABLET_COLLAPSED_NOTIFICATION_COUNT = 4;
     const MOBILE_COLLAPSED_NOTIFICATION_COUNT = 3;
@@ -988,6 +990,13 @@
         fetchNotifications(studentEmail, options);
       }, 140);
     }
+    function scheduleApplicationsRefresh(studentEmail) {
+      if (!studentEmail) return;
+      if (applicationRefreshTimer) window.clearTimeout(applicationRefreshTimer);
+      applicationRefreshTimer = window.setTimeout(() => {
+        refreshStudentApplicationsViews(studentEmail);
+      }, 140);
+    }
     function subscribeToNotificationsRealtime(studentEmail) {
       if (!studentEmail) return;
       if (notificationChannel) {
@@ -1023,6 +1032,60 @@
             console.warn('Notification realtime channel error.');
           }
         });
+    }
+    function subscribeToApplicationsRealtime(studentEmail) {
+      if (!studentEmail) return;
+      if (applicationChannel) {
+        try { supabaseClient.removeChannel(applicationChannel); } catch (_) {}
+        applicationChannel = null;
+      }
+
+      const filter = `email=eq.${studentEmail}`;
+      applicationChannel = supabaseClient
+        .channel(`student-applications:${studentEmail}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'applicants_iskolar', filter },
+          () => scheduleApplicationsRefresh(studentEmail)
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'applicants_iskolar', filter },
+          () => scheduleApplicationsRefresh(studentEmail)
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'applicants_iskolar', filter },
+          () => scheduleApplicationsRefresh(studentEmail)
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.warn('Application realtime channel error.');
+          }
+        });
+    }
+
+    function refreshTrackingFrameApplications() {
+      const trackingFrame = document.getElementById("trackingFrame");
+      if (!trackingFrame) return;
+      try {
+        const win = trackingFrame.contentWindow;
+        if (!win) return;
+        if (typeof win.fetchApplications === "function") {
+          win.fetchApplications();
+        } else if (trackingFrame.src && trackingFrame.src.includes("tracking.html")) {
+          trackingFrame.src = `tracking.html?v=${Date.now()}`;
+        }
+      } catch (_) {}
+    }
+
+    async function refreshStudentApplicationsViews(studentEmail) {
+      if (!studentEmail) return;
+      await Promise.all([
+        loadCounts(studentEmail),
+        fetchApplicationsSnapshot(studentEmail),
+      ]);
+      refreshTrackingFrameApplications();
     }
     function showPrompt(message, type = 'info', timeout = 3200) {
       const host = document.getElementById('notifyHost');
@@ -1145,6 +1208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   refreshDashboardHeroPhoto(studentEmail);
   fetchNotifications(studentEmail);
   subscribeToNotificationsRealtime(studentEmail);
+  subscribeToApplicationsRealtime(studentEmail);
   const notificationsToggleBtn = document.getElementById('notificationsToggleBtn');
   if (notificationsToggleBtn) {
     notificationsToggleBtn.addEventListener('click', () => {
@@ -1157,7 +1221,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
   document.addEventListener('pointerdown', unlockAudio, { once: true });
   document.addEventListener('keydown', unlockAudio, { once: true });
-  fetchApplicationsSnapshot(studentEmail);
+  refreshStudentApplicationsViews(studentEmail);
 });
 
 window.addEventListener('ease-device-change', () => {
@@ -1170,6 +1234,10 @@ window.addEventListener('beforeunload', () => {
     window.clearTimeout(notificationRefreshTimer);
     notificationRefreshTimer = null;
   }
+  if (applicationRefreshTimer) {
+    window.clearTimeout(applicationRefreshTimer);
+    applicationRefreshTimer = null;
+  }
   if (notificationPollHandle) {
     window.clearInterval(notificationPollHandle);
     notificationPollHandle = null;
@@ -1177,6 +1245,10 @@ window.addEventListener('beforeunload', () => {
   if (notificationChannel) {
     try { supabaseClient.removeChannel(notificationChannel); } catch (_) {}
     notificationChannel = null;
+  }
+  if (applicationChannel) {
+    try { supabaseClient.removeChannel(applicationChannel); } catch (_) {}
+    applicationChannel = null;
   }
 });
 
@@ -1657,16 +1729,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
- async function loadCounts() {
-  const { data: sessionData } = await supabaseClient.auth.getSession();
-  const user = sessionData?.session?.user;
-
-  if (!user) {
-    console.log("No logged in user");
-    return;
+ async function loadCounts(studentEmail) {
+  let email = studentEmail;
+  if (!email) {
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const user = sessionData?.session?.user;
+    if (!user) {
+      console.log("No logged in user");
+      return;
+    }
+    email = user.email;
   }
-
-  const email = user.email;
 
   const { data: apps, error } = await supabaseClient
     .from("applicants_iskolar")
@@ -1683,7 +1756,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   apps.forEach(row => {
     const status = row.status?.toLowerCase();
     if (status === "approved") approved++;
-    else if (status === "pending") pending++;
+    else if (status === "pending" || status === "processing") pending++;
     else if (status === "rejected") rejected++;
   });
 
@@ -1695,8 +1768,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById("mRejected").textContent = rejected;
   document.getElementById("mUpcoming").textContent = total; // ✅ Update total
 }
-
-document.addEventListener("DOMContentLoaded", loadCounts);
 
 
     // Load user profile data (read-only by default)

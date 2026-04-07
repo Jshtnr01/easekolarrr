@@ -306,6 +306,9 @@
 let applicantData = [];
 let activeFilter = "All";
 const MOBILE_BREAKPOINT = 640;
+let trackingRealtimeChannel = null;
+let trackingRefreshTimer = null;
+let trackingStudentEmail = "";
 
 function isMobileView() {
   return window.innerWidth <= MOBILE_BREAKPOINT;
@@ -357,6 +360,8 @@ async function fetchApplications() {
     return;
   }
 
+  trackingStudentEmail = user.email;
+
   const { data, error } = await supabase
     .from("applicants_iskolar")
     .select("Name, scholarship_program, campus, status, email")
@@ -370,6 +375,45 @@ async function fetchApplications() {
 
   applicantData = data;
   renderApplications();
+}
+
+function scheduleTrackingRefresh() {
+  if (trackingRefreshTimer) window.clearTimeout(trackingRefreshTimer);
+  trackingRefreshTimer = window.setTimeout(() => {
+    fetchApplications();
+  }, 140);
+}
+
+function subscribeTrackingRealtime(email) {
+  if (!email) return;
+  if (trackingRealtimeChannel) {
+    try { supabase.removeChannel(trackingRealtimeChannel); } catch (_) {}
+    trackingRealtimeChannel = null;
+  }
+
+  const filter = `email=eq.${email}`;
+  trackingRealtimeChannel = supabase
+    .channel(`tracking-updates:${email}`)
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "applicants_iskolar", filter },
+      scheduleTrackingRefresh
+    )
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "applicants_iskolar", filter },
+      scheduleTrackingRefresh
+    )
+    .on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: "applicants_iskolar", filter },
+      scheduleTrackingRefresh
+    )
+    .subscribe((status) => {
+      if (status === "CHANNEL_ERROR") {
+        console.warn("Tracking realtime channel error.");
+      }
+    });
 }
 
 function renderApplications() {
@@ -422,6 +466,7 @@ function renderApplications() {
 }
 
 window.renderApplications = renderApplications;
+window.fetchApplications = fetchApplications;
 
 function setFilter(filter) {
   activeFilter = filter;
@@ -429,13 +474,25 @@ function setFilter(filter) {
 }
 
 window.setFilter = setFilter;
-window.onload = () => {
+window.onload = async () => {
   applyTheme(localStorage.getItem('theme'));
-  fetchApplications();
+  await fetchApplications();
+  subscribeTrackingRealtime(trackingStudentEmail);
 };
 
 window.addEventListener('resize', () => {
   renderApplications();
+});
+
+window.addEventListener('beforeunload', () => {
+  if (trackingRefreshTimer) {
+    window.clearTimeout(trackingRefreshTimer);
+    trackingRefreshTimer = null;
+  }
+  if (trackingRealtimeChannel) {
+    try { supabase.removeChannel(trackingRealtimeChannel); } catch (_) {}
+    trackingRealtimeChannel = null;
+  }
 });
 </script>
 
